@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'new_password_screen.dart'; // Import the new password screen
 
 class VerificationForgotPassword extends StatefulWidget {
-  const VerificationForgotPassword({Key? key}) : super(key: key);
+  const VerificationForgotPassword({super.key});
 
   @override
   _VerificationForgotPasswordState createState() => _VerificationForgotPasswordState();
@@ -105,13 +105,13 @@ class _VerificationForgotPasswordState extends State<VerificationForgotPassword>
               // Verify button
               ElevatedButton(
                 onPressed: _verifyCode,
-                child: const Text(
-                  'Verify',
-                  style: TextStyle(color: Colors.white), // Set text color to white
-                ),
                 style: ElevatedButton.styleFrom(
                   minimumSize: const Size(double.infinity, 50),
                   backgroundColor: const Color(0xFF2094F3),
+                ),
+                child: const Text(
+                  'Verify',
+                  style: TextStyle(color: Colors.white), // Set text color to white
                 ),
               ),
             ],

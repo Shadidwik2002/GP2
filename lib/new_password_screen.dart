@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 
 class NewPasswordScreen extends StatefulWidget {
-  const NewPasswordScreen({Key? key}) : super(key: key);
+  const NewPasswordScreen({super.key});
 
   @override
   _NewPasswordScreenState createState() => _NewPasswordScreenState();
@@ -13,7 +13,7 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController = TextEditingController();
   
-  List<String> _passwordErrors = [];
+  final List<String> _passwordErrors = [];
   String _confirmPasswordError = '';
   bool _isPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
@@ -124,11 +124,11 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(10),
-            boxShadow: [
+            boxShadow: const [
               BoxShadow(
-                color: const Color(0x29000000),
+                color: Color(0x29000000),
                 blurRadius: 4,
-                offset: const Offset(2, 2),
+                offset: Offset(2, 2),
               ),
             ],
           ),

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; // Import for filtering input
 import 'sign_up_screen.dart'; // Import the SignUpScreen
 import 'forgot_password_screen.dart'; // Import the ForgotPasswordScreen
+import 'rate_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -14,9 +15,9 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return const MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: const LoginScreen(),
+      home: LoginScreen(),
     );
   }
 }
@@ -124,7 +125,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   hintText: 'Password',
                   filled: true,
                   fillColor: const Color(0xFFF0F2F5),
-                  border: OutlineInputBorder(
+                  border: const OutlineInputBorder(
                     borderRadius: BorderRadius.only(
                       topLeft: Radius.circular(10),
                       bottomLeft: Radius.circular(10),

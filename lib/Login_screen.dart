@@ -1,10 +1,8 @@
-// lib/main.dart
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; // Import for filtering input
 import 'sign_up_screen.dart'; // Import the SignUpScreen
-import 'forgot_password_screen.dart'; // Import the ForgotPasswordScreen
-import 'rate_screen.dart';
+import 'forgot_password_screen.dart';
+import 'home_screen.dart'; // Import the ForgotPasswordScreen
 
 void main() {
   runApp(const MyApp());
@@ -32,7 +30,10 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+
   bool _isPasswordVisible = false; // Track password visibility
+  String? _phoneError;
+  String? _passwordError;
 
   @override
   void dispose() {
@@ -40,6 +41,34 @@ class _LoginScreenState extends State<LoginScreen> {
     _phoneController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  void _validateFields() {
+    setState(() {
+      _phoneError = null;
+      _passwordError = null;
+
+      if (_phoneController.text.isEmpty) {
+        _phoneError = 'Phone number is required';
+      }
+
+      if (_passwordController.text.isEmpty) {
+        _passwordError = 'Password is required';
+      }
+    });
+  }
+
+  void _login() {
+    _validateFields();
+
+    if (_phoneError == null && _passwordError == null) {
+      // Handle successful login here
+      // For now, show a success dialog
+         Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const HomeScreen()));
+   
+    }
   }
 
   @override
@@ -92,58 +121,84 @@ class _LoginScreenState extends State<LoginScreen> {
             // Phone Number Field
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-              child: TextFormField(
-                controller: _phoneController, // Set the controller here
-                keyboardType: TextInputType.phone,
-                maxLength: 10, // Limit input to 10 characters
-                inputFormatters: <TextInputFormatter>[
-                  FilteringTextInputFormatter.digitsOnly, // Only allow digits
-                ],
-                decoration: const InputDecoration(
-                  hintText: 'Phone Number',
-                  filled: true,
-                  fillColor: Color(0xFFF0F2F5),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(10),
-                      bottomLeft: Radius.circular(10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  TextFormField(
+                    controller: _phoneController, // Set the controller here
+                    keyboardType: TextInputType.phone,
+                    maxLength: 10, // Limit input to 10 characters
+                    inputFormatters: <TextInputFormatter>[
+                      FilteringTextInputFormatter.digitsOnly, // Only allow digits
+                    ],
+                    decoration: const InputDecoration(
+                      hintText: 'Phone Number',
+                      filled: true,
+                      fillColor: Color(0xFFF0F2F5),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.only(
+                          topLeft: Radius.circular(10),
+                          bottomLeft: Radius.circular(10),
+                        ),
+                        borderSide: BorderSide.none,
+                      ),
+                      suffixIcon: Icon(Icons.phone, color: Color(0xFF60778A)), // Changed icon to phone
                     ),
-                    borderSide: BorderSide.none,
                   ),
-                  suffixIcon: Icon(Icons.phone, color: Color(0xFF60778A)), // Changed icon to phone
-                ),
+                  if (_phoneError != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 5),
+                      child: Text(
+                        _phoneError!,
+                        style: const TextStyle(color: Colors.red, fontSize: 14),
+                      ),
+                    ),
+                ],
               ),
             ),
 
             // Password Field
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-              child: TextFormField(
-                controller: _passwordController, // Set the controller here
-                obscureText: !_isPasswordVisible, // Use visibility toggle
-                decoration: InputDecoration(
-                  hintText: 'Password',
-                  filled: true,
-                  fillColor: const Color(0xFFF0F2F5),
-                  border: const OutlineInputBorder(
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(10),
-                      bottomLeft: Radius.circular(10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  TextFormField(
+                    controller: _passwordController, // Set the controller here
+                    obscureText: !_isPasswordVisible, // Use visibility toggle
+                    decoration: InputDecoration(
+                      hintText: 'Password',
+                      filled: true,
+                      fillColor: const Color(0xFFF0F2F5),
+                      border: const OutlineInputBorder(
+                        borderRadius: BorderRadius.only(
+                          topLeft: Radius.circular(10),
+                          bottomLeft: Radius.circular(10),
+                        ),
+                        borderSide: BorderSide.none,
+                      ),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                          color: const Color(0xFF60778A),
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _isPasswordVisible = !_isPasswordVisible; // Toggle password visibility
+                          });
+                        },
+                      ),
                     ),
-                    borderSide: BorderSide.none,
                   ),
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
-                      color: const Color(0xFF60778A),
+                  if (_passwordError != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 5),
+                      child: Text(
+                        _passwordError!,
+                        style: const TextStyle(color: Colors.red, fontSize: 14),
+                      ),
                     ),
-                    onPressed: () {
-                      setState(() {
-                        _isPasswordVisible = !_isPasswordVisible; // Toggle password visibility
-                      });
-                    },
-                  ),
-                ),
+                ],
               ),
             ),
 
@@ -174,7 +229,7 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Column(
                 children: [
                   ElevatedButton(
-                    onPressed: () {}, // Handle login action here
+                    onPressed: _login, // Call the login function
                     style: ElevatedButton.styleFrom(
                       minimumSize: const Size(double.infinity, 50),
                       backgroundColor: const Color(0xFF2094F3),

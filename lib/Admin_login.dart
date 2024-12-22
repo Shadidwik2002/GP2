@@ -43,30 +43,78 @@ class _AdminLoginState extends State<AdminLogin> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF9FAFB),
       appBar: AppBar(
-        title: const Text('Admin Login'),
+        title: const Text(
+          'Admin Login',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
         backgroundColor: const Color(0xFF2094F3),
+        centerTitle: true,
+        elevation: 0,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            const Text(
-              'Admin Login',
-              style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+            const SizedBox(height: 20),
+            // Admin Logo/Icon
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.grey.shade300,
+                    blurRadius: 10,
+                    offset: const Offset(0, 5),
+                  ),
+                ],
+              ),
+              child: const CircleAvatar(
+                radius: 50,
+                backgroundColor: Colors.white,
+                child: Icon(
+                  Icons.admin_panel_settings,
+                  size: 60,
+                  color: Color(0xFF2094F3),
+                ),
+              ),
             ),
             const SizedBox(height: 20),
+
+            const Text(
+              'Welcome, Admin!',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF111418),
+              ),
+            ),
+            const SizedBox(height: 10),
+            const Text(
+              'Please login to access your dashboard',
+              style: TextStyle(
+                fontSize: 16,
+                color: Color(0xFF60778A),
+              ),
+            ),
+            const SizedBox(height: 30),
 
             // Email TextField
             _buildTextField(
               hintText: 'Email Address',
               controller: _emailController,
               errorMessage: _emailError,
-              icon: Icons.email,
+              icon: Icons.email_outlined,
               keyboardType: TextInputType.emailAddress,
             ),
-            const SizedBox(height: 15),
+            const SizedBox(height: 20),
 
             // Password TextField
             _buildPasswordField(
@@ -74,15 +122,29 @@ class _AdminLoginState extends State<AdminLogin> {
               controller: _passwordController,
               errorMessage: _passwordError,
             ),
+            const SizedBox(height: 10),
+
+            // Forgot Password
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                onPressed: () {
+                  // Navigate to Forgot Password screen logic here
+                },
+                child: const Text(
+                  'Forgot Password?',
+                  style: TextStyle(color: Color(0xFF2094F3), fontWeight: FontWeight.bold),
+                ),
+              ),
+            ),
             const SizedBox(height: 20),
 
             // Login Button
             ElevatedButton(
               onPressed: () {
                 _validateInputs();
-                // Navigate to Dashboard (Replace with backend logic)
+                // Mock navigation on successful login
                 if (_emailError.isEmpty && _passwordError.isEmpty) {
-                  // Mock navigation on successful login
                   Navigator.pushReplacement(
                     context,
                     MaterialPageRoute(
@@ -102,17 +164,27 @@ class _AdminLoginState extends State<AdminLogin> {
                 minimumSize: const Size(double.infinity, 50),
                 backgroundColor: const Color(0xFF2094F3),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(12),
                 ),
                 elevation: 5,
               ),
               child: const Text(
                 'Login',
                 style: TextStyle(
-                  fontSize: 16,
+                  fontSize: 18,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
                 ),
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // Footer
+            const Text(
+              '© 2024 Admin Panel. All rights reserved.',
+              style: TextStyle(
+                fontSize: 12,
+                color: Color(0xFF60778A),
               ),
             ),
           ],
@@ -208,7 +280,7 @@ class _AdminLoginState extends State<AdminLogin> {
                 borderRadius: BorderRadius.circular(10),
                 borderSide: BorderSide.none,
               ),
-              prefixIcon: const Icon(Icons.lock, color: Color(0xFF60778A)),
+              prefixIcon: const Icon(Icons.lock_outline, color: Color(0xFF60778A)),
               suffixIcon: IconButton(
                 icon: Icon(
                   _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
@@ -219,10 +291,6 @@ class _AdminLoginState extends State<AdminLogin> {
                     _isPasswordVisible = !_isPasswordVisible;
                   });
                 },
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-                borderSide: const BorderSide(color: Color(0xFF2094F3), width: 2.0),
               ),
               contentPadding: const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
             ),

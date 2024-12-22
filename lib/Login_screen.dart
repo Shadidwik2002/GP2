@@ -50,6 +50,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (_phoneController.text.isEmpty) {
         _phoneError = 'Phone number is required';
+      } else if (_phoneController.text.length != 10) {
+        _phoneError = 'Phone number must be exactly 10 digits';
       }
 
       if (_passwordController.text.isEmpty) {
@@ -63,11 +65,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (_phoneError == null && _passwordError == null) {
       // Handle successful login here
-      // For now, show a success dialog
-         Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const HomeScreen()));
-   
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
+      );
     }
   }
 
@@ -125,24 +126,21 @@ class _LoginScreenState extends State<LoginScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   TextFormField(
-                    controller: _phoneController, // Set the controller here
+                    controller: _phoneController,
                     keyboardType: TextInputType.phone,
-                    maxLength: 10, // Limit input to 10 characters
-                    inputFormatters: <TextInputFormatter>[
-                      FilteringTextInputFormatter.digitsOnly, // Only allow digits
+                    maxLength: 10,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
                     ],
                     decoration: const InputDecoration(
                       hintText: 'Phone Number',
                       filled: true,
                       fillColor: Color(0xFFF0F2F5),
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.only(
-                          topLeft: Radius.circular(10),
-                          bottomLeft: Radius.circular(10),
-                        ),
+                        borderRadius: BorderRadius.all(Radius.circular(10)),
                         borderSide: BorderSide.none,
                       ),
-                      suffixIcon: Icon(Icons.phone, color: Color(0xFF60778A)), // Changed icon to phone
+                      suffixIcon: Icon(Icons.phone, color: Color(0xFF60778A)),
                     ),
                   ),
                   if (_phoneError != null)
@@ -164,17 +162,14 @@ class _LoginScreenState extends State<LoginScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   TextFormField(
-                    controller: _passwordController, // Set the controller here
-                    obscureText: !_isPasswordVisible, // Use visibility toggle
+                    controller: _passwordController,
+                    obscureText: !_isPasswordVisible,
                     decoration: InputDecoration(
                       hintText: 'Password',
                       filled: true,
                       fillColor: const Color(0xFFF0F2F5),
                       border: const OutlineInputBorder(
-                        borderRadius: BorderRadius.only(
-                          topLeft: Radius.circular(10),
-                          bottomLeft: Radius.circular(10),
-                        ),
+                        borderRadius: BorderRadius.all(Radius.circular(10)),
                         borderSide: BorderSide.none,
                       ),
                       suffixIcon: IconButton(
@@ -184,7 +179,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         onPressed: () {
                           setState(() {
-                            _isPasswordVisible = !_isPasswordVisible; // Toggle password visibility
+                            _isPasswordVisible = !_isPasswordVisible;
                           });
                         },
                       ),
@@ -205,7 +200,6 @@ class _LoginScreenState extends State<LoginScreen> {
             // Forgot password text
             GestureDetector(
               onTap: () {
-                // Navigate to Forgot Password Screen
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => const ForgotPasswordScreen()),
@@ -229,7 +223,7 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Column(
                 children: [
                   ElevatedButton(
-                    onPressed: _login, // Call the login function
+                    onPressed: _login,
                     style: ElevatedButton.styleFrom(
                       minimumSize: const Size(double.infinity, 50),
                       backgroundColor: const Color(0xFF2094F3),
@@ -254,7 +248,6 @@ class _LoginScreenState extends State<LoginScreen> {
             // Don't have an account text
             GestureDetector(
               onTap: () {
-                // Navigate to Sign Up Screen
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => const SignUpScreen()),
@@ -267,7 +260,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   style: TextStyle(
                     color: Color(0xFF60778A),
                     fontSize: 14,
-                    decoration: TextDecoration.underline, // Optional underline
+                    decoration: TextDecoration.underline,
                   ),
                   textAlign: TextAlign.center,
                 ),

@@ -1,5 +1,3 @@
-// lib/verify_number_screen.dart
-
 import 'package:flutter/material.dart';
 import 'new_password_screen.dart'; // Import the new password screen
 
@@ -36,32 +34,47 @@ class _VerificationForgotPasswordState extends State<VerificationForgotPassword>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Verify Your Number'),
+        title: const Text(
+          'Verify Your Number',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         backgroundColor: const Color(0xFF2094F3),
+        centerTitle: true,
+        elevation: 0,
       ),
-      body: Center(
+      body: SingleChildScrollView(
         child: Padding(
-          padding: const EdgeInsets.all(20.0),
+          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 40),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // Insert the image here
-              Container(
-                margin: const EdgeInsets.only(bottom: 20),
-                child: Image.asset(
-                  'images/letter.png', // Replace with your image URL
-                  height: 150,
-                  width: 150,
-                  fit: BoxFit.contain,
-                ),
-              ),
-              const Text(
-                'Please enter the 4 digit code sent to your number.',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 16),
+              // Image Section
+              Image.asset(
+                'images/letter.png', // Replace with your image URL
+                height: 150,
+                width: 150,
+                fit: BoxFit.contain,
               ),
               const SizedBox(height: 20),
-              // Code input boxes
+
+              // Heading and Description
+              const Text(
+                'Enter Verification Code',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 10),
+              const Text(
+                'Please enter the 4-digit code sent to your registered phone number.',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 16, color: Colors.grey),
+              ),
+              const SizedBox(height: 30),
+
+              // Code Input Row
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: List.generate(4, (index) {
@@ -69,49 +82,72 @@ class _VerificationForgotPasswordState extends State<VerificationForgotPassword>
                     width: 60,
                     child: TextFormField(
                       controller: _controllers[index],
-                      decoration: const InputDecoration(
-                        border: OutlineInputBorder(),
+                      decoration: InputDecoration(
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Color(0xFF2094F3)),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Colors.grey),
+                        ),
                       ),
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                       keyboardType: TextInputType.number,
                       textAlign: TextAlign.center,
                       maxLength: 1,
-                      buildCounter: (BuildContext context,
-                          {int? currentLength, int? maxLength, bool? isFocused}) {
-                        return const SizedBox.shrink(); // Hide counter
-                      },
+                      buildCounter: (_, {int currentLength = 0, int? maxLength, bool? isFocused}) =>
+                          const SizedBox.shrink(), // Updated to fix null issue
                     ),
                   );
                 }),
               ),
-              const SizedBox(height: 5),
-              // Display warning message if the code is incorrect
+
+              // Warning Message
+              const SizedBox(height: 10),
               if (warningMessage != null)
                 Text(
                   warningMessage!,
                   style: const TextStyle(color: Colors.red, fontSize: 14),
                 ),
+
+              // Resend Code
               const SizedBox(height: 20),
-              // Resend Code button
               TextButton(
                 onPressed: () {
                   // Handle resend code action here
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Verification code resent!')),
+                  );
                 },
                 child: const Text(
                   'Resend Code',
-                  style: TextStyle(color: Color(0xFF2094F3)),
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Color(0xFF2094F3),
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
+
               const SizedBox(height: 20),
-              // Verify button
-              ElevatedButton(
-                onPressed: _verifyCode,
-                style: ElevatedButton.styleFrom(
-                  minimumSize: const Size(double.infinity, 50),
-                  backgroundColor: const Color(0xFF2094F3),
-                ),
-                child: const Text(
-                  'Verify',
-                  style: TextStyle(color: Colors.white), // Set text color to white
+
+              // Verify Button
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _verifyCode,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF2094F3),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text(
+                    'Verify',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                  ),
                 ),
               ),
             ],

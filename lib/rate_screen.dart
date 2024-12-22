@@ -1,5 +1,3 @@
-// lib/rate_screen.dart
-
 import 'package:flutter/material.dart';
 
 class RateScreen extends StatefulWidget {
@@ -18,14 +16,23 @@ class _RateScreenState extends State<RateScreen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Thank You!'),
-          content: const Text('Thank you for your feedback!'),
+          title: const Text(
+            'Thank You!',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+          content: const Text(
+            'We appreciate your feedback. Thank you for helping us improve!',
+            style: TextStyle(fontSize: 16, color: Colors.grey),
+          ),
           actions: <Widget>[
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop(); // Close dialog
               },
-              child: const Text('OK'),
+              child: const Text(
+                'OK',
+                style: TextStyle(color: Color(0xFF1980E6), fontWeight: FontWeight.bold),
+              ),
             ),
           ],
         );
@@ -36,6 +43,7 @@ class _RateScreenState extends State<RateScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF9FAFB),
       appBar: AppBar(
         title: const Text(
           'Rate John',
@@ -43,7 +51,6 @@ class _RateScreenState extends State<RateScreen> {
             color: Color(0xFF111418),
             fontWeight: FontWeight.bold,
             fontSize: 18,
-            letterSpacing: -0.015,
           ),
         ),
         centerTitle: true,
@@ -52,186 +59,169 @@ class _RateScreenState extends State<RateScreen> {
           onPressed: () => Navigator.pop(context),
         ),
         backgroundColor: Colors.white,
-        elevation: 0,
+        elevation: 1,
       ),
-      body: Column(
-        children: [
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 20),
-            child: Text(
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            const SizedBox(height: 20),
+            // Title
+            const Text(
               'How would you rate John?',
               style: TextStyle(
-                color: Color(0xFF111418),
-                fontSize: 22,
+                fontSize: 24,
                 fontWeight: FontWeight.bold,
-                letterSpacing: -0.015,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Column(
-                  children: [
-                    Text(
-                      '$_selectedRating',
-                      style: const TextStyle(
-                        color: Color(0xFF111418),
-                        fontSize: 36,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    Row(
-                      children: List.generate(5, (index) {
-                        return IconButton(
-                          icon: Icon(
-                            Icons.star,
-                            color: index < _selectedRating
-                                ? const Color(0xFF111418)
-                                : const Color(0xFFdce0e5),
-                            size: 24,
-                          ),
-                          onPressed: () {
-                            setState(() {
-                              _selectedRating = index + 1;
-                            });
-                          },
-                        );
-                      }),
-                    ),
-                    const Text(
-                      '1 review',
-                      style: TextStyle(
-                        color: Color(0xFF111418),
-                        fontSize: 14,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    children: List.generate(5, (index) {
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 3),
-                        child: Row(
-                          children: [
-                            Text(
-                              '${5 - index}',
-                              style: const TextStyle(
-                                color: Color(0xFF111418),
-                                fontSize: 14,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Container(
-                                height: 8,
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFdce0e5),
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: FractionallySizedBox(
-                                  widthFactor: index == 0 ? 1.0 : 0.0,
-                                  alignment: Alignment.centerLeft,
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFF111418),
-                                      borderRadius: BorderRadius.circular(4),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              '${index == 0 ? 100 : 0}%',
-                              style: const TextStyle(
-                                color: Color(0xFF637588),
-                                fontSize: 14,
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    }),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16),
-            child: Text(
-              "Your feedback helps us ensure we're providing the best possible service.",
-              style: TextStyle(
                 color: Color(0xFF111418),
-                fontSize: 16,
               ),
-              textAlign: TextAlign.center,
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            const SizedBox(height: 10),
+            const Text(
+              'Your feedback helps us improve our service.',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 16, color: Colors.grey),
+            ),
+            const SizedBox(height: 30),
+
+            // Rating Stars and Counter
+            Column(
               children: [
-                const Text(
-                  'Review',
-                  style: TextStyle(
-                    color: Color(0xFF111418),
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
+                Text(
+                  '$_selectedRating',
+                  style: const TextStyle(
+                    fontSize: 40,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF1980E6),
                   ),
                 ),
-                const SizedBox(height: 8),
-                TextField(
-                  maxLines: 5,
-                  decoration: InputDecoration(
-                    hintText: 'Write a detailed review',
-                    hintStyle: const TextStyle(
-                      color: Color(0xFF637588),
-                    ),
-                    filled: true,
-                    fillColor: const Color(0xFFF0F2F4),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none,
-                    ),
-                  ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(5, (index) {
+                    return GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _selectedRating = index + 1;
+                        });
+                      },
+                      child: Icon(
+                        Icons.star,
+                        size: 40,
+                        color: index < _selectedRating
+                            ? const Color(0xFF1980E6)
+                            : const Color(0xFFE0E0E0),
+                      ),
+                    );
+                  }),
+                ),
+                const SizedBox(height: 10),
+                const Text(
+                  '1 Review',
+                  style: TextStyle(fontSize: 14, color: Color(0xFF637588)),
                 ),
               ],
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: SizedBox(
-              width: double.infinity,
-              height: 48,
-              child: ElevatedButton(
-                onPressed: () {
-                  _showThankYouDialog(); // Show thank you dialog on submit
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF1980E6),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+            const SizedBox(height: 30),
+
+            // Rating Distribution Section
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Column(
+                children: List.generate(5, (index) {
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: Row(
+                      children: [
+                        Text(
+                          '${5 - index}',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                            color: Color(0xFF111418),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: LinearProgressIndicator(
+                            value: index == 0 ? 1.0 : 0.0,
+                            backgroundColor: const Color(0xFFE0E0E0),
+                            valueColor:
+                                const AlwaysStoppedAnimation<Color>(Color(0xFF1980E6)),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Text(
+                          '${index == 0 ? 100 : 0}%',
+                          style: const TextStyle(fontSize: 14, color: Color(0xFF637588)),
+                        ),
+                      ],
+                    ),
+                  );
+                }),
+              ),
+            ),
+            const SizedBox(height: 30),
+
+            // Review Section
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Review',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w500,
+                      color: Color(0xFF111418),
+                    ),
                   ),
-                ),
-                child: const Text(
-                  'Submit',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
+                  const SizedBox(height: 10),
+                  TextField(
+                    maxLines: 5,
+                    decoration: InputDecoration(
+                      hintText: 'Write your review here...',
+                      hintStyle: const TextStyle(color: Color(0xFF9FA6B2)),
+                      filled: true,
+                      fillColor: const Color(0xFFF0F2F4),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // Submit Button
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: ElevatedButton(
+                  onPressed: _showThankYouDialog,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF1980E6),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 5,
+                  ),
+                  child: const Text(
+                    'Submit',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
-        ],
+            const SizedBox(height: 20),
+          ],
+        ),
       ),
     );
   }

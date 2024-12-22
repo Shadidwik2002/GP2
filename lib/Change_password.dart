@@ -49,9 +49,18 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
         _confirmPasswordError = 'Confirm password must match the new password.';
       }
 
-      if (_currentPasswordError == null && _confirmPasswordError == null && hasMinLength && hasUppercase && hasLowercase && hasNumber && hasSpecialChar) {
+      if (_currentPasswordError == null &&
+          _confirmPasswordError == null &&
+          hasMinLength &&
+          hasUppercase &&
+          hasLowercase &&
+          hasNumber &&
+          hasSpecialChar) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Password updated successfully!')),
+          const SnackBar(
+            content: Text('Password updated successfully!'),
+            backgroundColor: Colors.green,
+          ),
         );
       }
     });
@@ -61,13 +70,17 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     return Row(
       children: [
         Icon(
-          isValid ? Icons.check : Icons.close,
+          isValid ? Icons.check_circle : Icons.cancel,
           color: isValid ? Colors.green : Colors.red,
+          size: 18,
         ),
         const SizedBox(width: 8),
         Text(
           text,
-          style: TextStyle(color: isValid ? Colors.green : Colors.red),
+          style: TextStyle(
+            color: isValid ? Colors.green : Colors.red,
+            fontSize: 14,
+          ),
         ),
       ],
     );
@@ -77,33 +90,55 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Change Password'),
+        title: const Text(
+          'Change Password',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: Colors.blue,
+        centerTitle: true,
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            const SizedBox(height: 10),
+
+            // Current Password Field
+            const Text(
+              'Current Password',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            ),
+            const SizedBox(height: 5),
             TextField(
               controller: _currentPasswordController,
               obscureText: true,
               decoration: InputDecoration(
-                labelText: 'Current Password',
+                hintText: 'Enter current password',
                 errorText: _currentPasswordError,
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                prefixIcon: const Icon(Icons.lock_outline, color: Colors.blue),
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
+
+            // New Password Field
+            const Text(
+              'New Password',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            ),
+            const SizedBox(height: 5),
             TextField(
               controller: _newPasswordController,
               obscureText: !_isNewPasswordVisible,
               onChanged: _validateNewPassword,
               decoration: InputDecoration(
-                labelText: 'New Password',
+                hintText: 'Enter new password',
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                prefixIcon: const Icon(Icons.vpn_key, color: Colors.blue),
                 suffixIcon: IconButton(
                   icon: Icon(
-                    _isNewPasswordVisible
-                        ? Icons.visibility
-                        : Icons.visibility_off,
+                    _isNewPasswordVisible ? Icons.visibility : Icons.visibility_off,
                     color: Colors.grey,
                   ),
                   onPressed: () {
@@ -114,24 +149,34 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                 ),
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 10),
+
+            // Password Constraints
             _buildConstraint('At least 8 characters', hasMinLength),
             _buildConstraint('At least 1 uppercase letter', hasUppercase),
             _buildConstraint('At least 1 lowercase letter', hasLowercase),
             _buildConstraint('At least 1 number', hasNumber),
             _buildConstraint('At least 1 special character (!@#\$&*~)', hasSpecialChar),
-            const SizedBox(height: 16),
+
+            const SizedBox(height: 20),
+
+            // Confirm Password Field
+            const Text(
+              'Confirm New Password',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            ),
+            const SizedBox(height: 5),
             TextField(
               controller: _confirmPasswordController,
               obscureText: !_isConfirmPasswordVisible,
               decoration: InputDecoration(
-                labelText: 'Confirm New Password',
+                hintText: 'Re-enter new password',
                 errorText: _confirmPasswordError,
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                prefixIcon: const Icon(Icons.lock_reset, color: Colors.blue),
                 suffixIcon: IconButton(
                   icon: Icon(
-                    _isConfirmPasswordVisible
-                        ? Icons.visibility
-                        : Icons.visibility_off,
+                    _isConfirmPasswordVisible ? Icons.visibility : Icons.visibility_off,
                     color: Colors.grey,
                   ),
                   onPressed: () {
@@ -142,17 +187,23 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                 ),
               ),
             ),
-            const SizedBox(height: 32),
+
+            const SizedBox(height: 30),
+
+            // Update Password Button
             SizedBox(
               width: double.infinity,
-              child: ElevatedButton(
+              child: ElevatedButton.icon(
                 onPressed: _validateAndSubmit,
+                icon: const Icon(Icons.save, color: Colors.white),
+                label: const Text(
+                  'Update Password',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold,color: Colors.white),
+                ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blue,
-                ),
-                child: const Text(
-                  'Update Password',
-                  style: TextStyle(color: Colors.white),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
               ),
             ),

@@ -1,5 +1,3 @@
-// lib/verification_screen.dart
-
 import 'package:flutter/material.dart';
 
 class VerificationScreen extends StatelessWidget {
@@ -14,125 +12,185 @@ class VerificationScreen extends StatelessWidget {
         ? '${'*' * (phoneNumber.length - 4)}${phoneNumber.substring(phoneNumber.length - 4)}'
         : phoneNumber;
 
-    // Create a TextEditingController to collect input from the code fields
-    final List<TextEditingController> controllers = List.generate(4, (index) => TextEditingController());
+    final List<TextEditingController> controllers =
+        List.generate(4, (index) => TextEditingController());
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF0F2F5), // Match this to the image's background color
+      backgroundColor: const Color(0xFFF9FAFB), // Light background for professional look
       appBar: AppBar(
-        title: const Text('Verification'),
         backgroundColor: const Color(0xFF2094F3),
+        elevation: 0,
+        centerTitle: true,
+        title: const Text(
+          'Verification',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // Image above the verification code
-            Image.asset(
-              'images/verify.png', // Local image path
-              height: 80, // Set a specific height
-              width: 80, // Set a specific width
-              fit: BoxFit.contain, // Ensure the image maintains its aspect ratio
-            ),
-            const SizedBox(height: 20), // Space between image and text
+            const SizedBox(height: 30),
 
-            const Text(
-              'Verification Code',
-              style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 10),
-
-            Text(
-              'Enter the 4-digit code sent to $maskedPhoneNumber',
-              style: TextStyle(fontSize: 16, color: Colors.grey[700]),
-              textAlign: TextAlign.center,
+            // Top Icon
+            Container(
+              padding: const EdgeInsets.all(15),
+              decoration: BoxDecoration(
+                color: const Color(0xFFEAF4FF),
+                borderRadius: BorderRadius.circular(100),
+              ),
+              child: const Icon(
+                Icons.verified_outlined,
+                size: 70,
+                color: Color(0xFF2094F3),
+              ),
             ),
             const SizedBox(height: 20),
 
-            // Input fields for the verification code
+            // Heading
+            const Text(
+              'Enter Verification Code',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF333333),
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 10),
+
+            // Description
+            Text(
+              'We have sent a 4-digit verification code to \n$maskedPhoneNumber',
+              style: const TextStyle(fontSize: 16, color: Colors.grey),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 30),
+
+            // Input fields for verification code
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: List.generate(4, (index) {
                 return SizedBox(
                   width: 60,
+                  height: 60,
                   child: TextFormField(
-                    controller: controllers[index], // Assign the controller to the field
+                    controller: controllers[index],
+                    textAlign: TextAlign.center,
+                    keyboardType: TextInputType.number,
+                    maxLength: 1,
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF333333),
+                    ),
                     decoration: InputDecoration(
-                      border: OutlineInputBorder(
+                      counterText: '',
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: const BorderSide(color: Color(0xFFB0BEC5)),
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      hintText: '', // No hint text
-                      contentPadding: const EdgeInsets.symmetric(vertical: 15),
-                      counterText: '', // Hide the counter text
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: const BorderSide(color: Color(0xFF2094F3)),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      fillColor: Colors.white,
+                      filled: true,
                     ),
-                    keyboardType: TextInputType.number,
-                    textAlign: TextAlign.center,
-                    maxLength: 1, // Limit to 1 character
                   ),
                 );
               }),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 30),
 
-            // Resend code text
+            // Resend Code Section
             GestureDetector(
               onTap: () {
-                // Logic to resend code
+                // Logic for resending the code
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Verification code resent successfully!'),
+                    backgroundColor: Colors.blue,
+                  ),
+                );
               },
               child: const Text(
-                "Didn't get the code? Click to resend",
-                style: TextStyle(color: Color(0xFF2094F3)),
+                "Didn't receive the code? Resend",
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Color(0xFF2094F3),
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 30),
 
-            // Buttons for Cancel and Verify
+            // Buttons
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(context); // Cancel button logic
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
+                // Cancel Button
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(context); // Navigate back
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      elevation: 3,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
-                    elevation: 5, // Add elevation for a shadow effect
-                  ),
-                  child: const Text(
-                    'Cancel',
-                    style: TextStyle(color: Colors.black), // Set text color to black
+                    child: const Text(
+                      'Cancel',
+                      style: TextStyle(color: Colors.black, fontSize: 16),
+                    ),
                   ),
                 ),
-                ElevatedButton(
-                  onPressed: () {
-                    // Verify button logic
-                    // Check if the entered code matches "1234"
-                    String enteredCode = controllers.map((controller) => controller.text).join('');
-                    if (enteredCode == '1234') {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Verification successful!')),
-                      );
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Invalid code, please try again.')),
-                      );
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF2094F3),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
+                const SizedBox(width: 15),
+
+                // Verify Button
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      // Combine entered code
+                      String enteredCode = controllers
+                          .map((controller) => controller.text)
+                          .join();
+                      if (enteredCode == '1234') {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Verification Successful!'),
+                            backgroundColor: Colors.green,
+                          ),
+                        );
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Invalid Code, Please Try Again.'),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF2094F3),
+                      elevation: 3,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
-                    elevation: 5, // Add elevation for a shadow effect
+                    child: const Text(
+                      'Verify',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
-                  child: const Text('Verify',
-                  style: TextStyle(color: Colors.white),),
-                  
                 ),
               ],
             ),

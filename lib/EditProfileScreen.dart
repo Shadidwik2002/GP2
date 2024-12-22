@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-// Import the ForgotPasswordScreen
 import 'verification_screen.dart'; // Import the VerificationScreen
 import 'Change_password.dart';
 
@@ -15,10 +14,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   final TextEditingController _lastNameController = TextEditingController();
   final TextEditingController _phoneNumberController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-
-  String? _firstNameError;
-  String? _lastNameError;
-  String? _phoneNumberError;
 
   // Validation logic for first name
   String? _validateFirstName(String? value) {
@@ -46,8 +41,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   void _submitForm() {
     if (_formKey.currentState?.validate() ?? false) {
-      // Handle successful form submission, like updating user profile
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Profile updated!')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Profile updated successfully!')),
+      );
     }
   }
 
@@ -55,104 +51,133 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Edit Profile'),
+        title: const Text('Edit Profile', style: TextStyle(fontWeight: FontWeight.bold)),
+        backgroundColor: Colors.blue,
         centerTitle: true,
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // First Name
+              const SizedBox(height: 10),
+
+              // Section Title
+              const Text(
+                'Personal Information',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black87),
+              ),
+              const SizedBox(height: 20),
+
+              // First Name Field
               TextFormField(
                 controller: _firstNameController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'First Name',
+                  hintText: 'Enter your first name',
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  prefixIcon: const Icon(Icons.person, color: Colors.blue),
                 ),
                 validator: _validateFirstName,
               ),
-              if (_firstNameError != null)
-                Text(
-                  _firstNameError!,
-                  style: const TextStyle(color: Colors.red),
-                ),
+              const SizedBox(height: 20),
 
-              // Last Name
+              // Last Name Field
               TextFormField(
                 controller: _lastNameController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Last Name',
+                  hintText: 'Enter your last name',
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  prefixIcon: const Icon(Icons.person_outline, color: Colors.blue),
                 ),
                 validator: _validateLastName,
               ),
-              if (_lastNameError != null)
-                Text(
-                  _lastNameError!,
-                  style: const TextStyle(color: Colors.red),
-                ),
+              const SizedBox(height: 20),
 
-              // Phone Number and Verify Button
+              // Phone Number Field with Verify Button
               Row(
                 children: [
                   Expanded(
                     child: TextFormField(
                       controller: _phoneNumberController,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'Phone Number',
+                        hintText: 'Enter your phone number',
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        prefixIcon: const Icon(Icons.phone, color: Colors.blue),
                       ),
                       validator: _validatePhoneNumber,
                       keyboardType: TextInputType.phone,
                     ),
                   ),
-                  const SizedBox(width: 16),
+                  const SizedBox(width: 10),
                   ElevatedButton(
                     onPressed: () {
-                      // Pass the phone number entered in the controller to the VerificationScreen
-                      String phoneNumber = _phoneNumberController.text;
-                      if (phoneNumber.isNotEmpty && phoneNumber.length == 10) {
+                      if (_phoneNumberController.text.length == 10) {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => VerificationScreen(phoneNumber: phoneNumber),
+                            builder: (context) =>
+                                VerificationScreen(phoneNumber: _phoneNumberController.text),
                           ),
                         );
                       } else {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Please enter a valid phone number.')),
+                          const SnackBar(
+                            content: Text('Please enter a valid phone number.'),
+                            backgroundColor: Colors.red,
+                          ),
                         );
                       }
                     },
-                    child: const Text('Verify'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    child: const Text('Verify', style: TextStyle(color: Colors.white)),
                   ),
                 ],
               ),
-              if (_phoneNumberError != null)
-                Text(
-                  _phoneNumberError!,
-                  style: const TextStyle(color: Colors.red),
-                ),
+              const SizedBox(height: 20),
 
-              const SizedBox(height: 16),
-
-              // Password Button (navigate to ForgotPasswordScreen)
-              ElevatedButton(
+              // Change Password Button
+              ElevatedButton.icon(
                 onPressed: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) =>  ChangePasswordScreen()),
+                    MaterialPageRoute(builder: (context) => const ChangePasswordScreen()),
                   );
                 },
-                child: const Text('Change Password'),
+                icon: const Icon(Icons.lock_outline, color: Colors.white),
+                label: const Text('Change Password', style: TextStyle(fontSize: 16,color: Colors.white) ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.redAccent,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
               ),
+              const SizedBox(height: 30),
 
-              const SizedBox(height: 24),
-
-              // Save button
-              ElevatedButton(
-                onPressed: _submitForm,
-                child: const Text('Save Changes'),
+              // Save Changes Button
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: _submitForm,
+                  icon: const Icon(Icons.save, color: Colors.white),
+                  label: const Text(
+                    'Save Changes',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
               ),
             ],
           ),

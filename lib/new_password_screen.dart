@@ -1,5 +1,3 @@
-// lib/new_password_screen.dart
-
 import 'package:flutter/material.dart';
 
 class NewPasswordScreen extends StatefulWidget {
@@ -12,7 +10,7 @@ class NewPasswordScreen extends StatefulWidget {
 class _NewPasswordScreenState extends State<NewPasswordScreen> {
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController = TextEditingController();
-  
+
   final List<String> _passwordErrors = [];
   String _confirmPasswordError = '';
   bool _isPasswordVisible = false;
@@ -26,25 +24,25 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
       // Password validation
       String password = _passwordController.text;
       if (password.isEmpty) {
-        _passwordErrors.add('Please enter a password');
+        _passwordErrors.add('Please enter a password.');
       } else {
-        if (password.length < 5) {
-          _passwordErrors.add('Password must be at least 5 characters long');
+        if (password.length < 8) {
+          _passwordErrors.add('Password must be at least 8 characters long.');
         }
         if (!RegExp(r'[A-Z]').hasMatch(password)) {
-          _passwordErrors.add('Password must contain at least one capital letter');
+          _passwordErrors.add('Password must contain at least one uppercase letter.');
         }
         if (!RegExp(r'[!@#$%^&*(),.?":{}|<>]').hasMatch(password)) {
-          _passwordErrors.add('Password must contain at least one special character');
+          _passwordErrors.add('Password must contain at least one special character.');
         }
       }
 
       // Confirm password validation
       if (_confirmPasswordController.text.isEmpty) {
-        _confirmPasswordError = 'Please confirm your password';
+        _confirmPasswordError = 'Please confirm your password.';
       } else if (_confirmPasswordController.text != password) {
-        _passwordErrors.add('Passwords do not match');
-        _confirmPasswordError = 'Passwords do not match';
+        _passwordErrors.add('Passwords do not match.');
+        _confirmPasswordError = 'Passwords do not match.';
       }
 
       // Show success message if no errors
@@ -72,63 +70,92 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
       appBar: AppBar(
         title: const Text('Set New Password'),
         backgroundColor: const Color(0xFF2094F3),
+        centerTitle: true,
+        elevation: 2,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Image.asset(
-                'images/shield.png', // Replace with your image path
-                height: 150,
-                width: 150,
-                fit: BoxFit.contain,
-              ),
-            ),
-            const SizedBox(height: 20),
-            _buildPasswordField('New Password', _passwordController, _passwordErrors),
-            const SizedBox(height: 15),
-            _buildPasswordField('Confirm Password', _confirmPasswordController, [], isConfirmPassword: true),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _validatePasswordFields,
-              style: ElevatedButton.styleFrom(
-                minimumSize: const Size(double.infinity, 50),
-                backgroundColor: const Color(0xFF2094F3),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                elevation: 5,
-              ),
-              child: const Text(
-                'Save Password',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Centered Image
+              Center(
+                child: Image.asset(
+                  'images/shield.png', // Replace with your image path
+                  height: 150,
+                  width: 150,
+                  fit: BoxFit.contain,
                 ),
               ),
-            ),
-          ],
+              const SizedBox(height: 20),
+
+              // New Password Field
+              _buildPasswordField(
+                hintText: 'New Password',
+                controller: _passwordController,
+                errorMessages: _passwordErrors,
+                isConfirmPassword: false,
+              ),
+              const SizedBox(height: 20),
+
+              // Confirm Password Field
+              _buildPasswordField(
+                hintText: 'Confirm Password',
+                controller: _confirmPasswordController,
+                errorMessages: const [],
+                isConfirmPassword: true,
+              ),
+              const SizedBox(height: 30),
+
+              // Save Password Button
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _validatePasswordFields,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF2094F3),
+                    padding: const EdgeInsets.symmetric(vertical: 15),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 5,
+                  ),
+                  child: const Text(
+                    'Save Password',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildPasswordField(String hintText, TextEditingController controller, List<String> errorMessages, {bool isConfirmPassword = false}) {
+  Widget _buildPasswordField({
+    required String hintText,
+    required TextEditingController controller,
+    required List<String> errorMessages,
+    required bool isConfirmPassword,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(12),
             boxShadow: const [
               BoxShadow(
-                color: Color(0x29000000),
-                blurRadius: 4,
-                offset: Offset(2, 2),
+                color: Colors.black12,
+                blurRadius: 5,
+                offset: Offset(0, 3),
               ),
             ],
           ),
@@ -137,13 +164,14 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
             obscureText: isConfirmPassword ? !_isConfirmPasswordVisible : !_isPasswordVisible,
             decoration: InputDecoration(
               hintText: hintText,
+              hintStyle: const TextStyle(color: Colors.grey),
               filled: true,
               fillColor: const Color(0xFFF0F2F5),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(12),
                 borderSide: BorderSide.none,
               ),
-              prefixIcon: const Icon(Icons.lock, color: Color(0xFF60778A)),
+              prefixIcon: const Icon(Icons.lock_outline, color: Color(0xFF60778A)),
               suffixIcon: IconButton(
                 icon: Icon(
                   isConfirmPassword
@@ -161,28 +189,33 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
                   });
                 },
               ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-                borderSide: const BorderSide(color: Color(0xFF2094F3), width: 2.0),
-              ),
-              contentPadding: const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
             ),
           ),
         ),
         if (errorMessages.isNotEmpty)
           Padding(
-            padding: const EdgeInsets.only(top: 5),
+            padding: const EdgeInsets.only(top: 8),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: errorMessages.map((msg) => Text(
-                msg,
-                style: const TextStyle(color: Colors.red, fontSize: 14),
-              )).toList(),
+              children: errorMessages.map((msg) {
+                return Row(
+                  children: [
+                    const Icon(Icons.error_outline, color: Colors.red, size: 18),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        msg,
+                        style: const TextStyle(color: Colors.red, fontSize: 14),
+                      ),
+                    ),
+                  ],
+                );
+              }).toList(),
             ),
           ),
         if (isConfirmPassword && _confirmPasswordError.isNotEmpty)
           Padding(
-            padding: const EdgeInsets.only(top: 5),
+            padding: const EdgeInsets.only(top: 8),
             child: Text(
               _confirmPasswordError,
               style: const TextStyle(color: Colors.red, fontSize: 14),

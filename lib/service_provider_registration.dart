@@ -1,5 +1,3 @@
-// lib/service_provider_registration.dart
-
 import 'package:flutter/material.dart';
 
 class ServiceProviderRegistration extends StatefulWidget {
@@ -231,34 +229,16 @@ class _ServiceProviderRegistrationState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(10),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x29000000),
-                blurRadius: 4,
-                offset: Offset(2, 2),
-              ),
-            ],
-          ),
-          child: TextFormField(
-            controller: controller,
-            keyboardType: keyboardType,
-            decoration: InputDecoration(
-              hintText: hintText,
-              filled: true,
-              fillColor: const Color(0xFFF0F2F5),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-                borderSide: BorderSide.none,
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-                borderSide: const BorderSide(color: Color(0xFF2094F3), width: 2.0),
-              ),
-              contentPadding: const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
+        TextFormField(
+          controller: controller,
+          keyboardType: keyboardType,
+          decoration: InputDecoration(
+            labelText: hintText,
+            filled: true,
+            fillColor: const Color(0xFFF0F2F5),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide.none,
             ),
           ),
         ),
@@ -274,39 +254,27 @@ class _ServiceProviderRegistrationState
     );
   }
 
- Widget _buildPasswordField(
-  String hintText,
-  TextEditingController controller,
-  List<String> errorMessages, {
-  bool isConfirmPassword = false,
-}) {
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(10),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x29000000),
-              blurRadius: 4,
-              offset: Offset(2, 2),
-            ),
-          ],
-        ),
-        child: TextFormField(
+  Widget _buildPasswordField(
+    String hintText,
+    TextEditingController controller,
+    List<String> errorMessages, {
+    bool isConfirmPassword = false,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        TextFormField(
           controller: controller,
           obscureText: isConfirmPassword ? !_isConfirmPasswordVisible : !_isPasswordVisible,
-          onChanged: (value) {
-            if (!isConfirmPassword) {
-              setState(() {});
-            }
-          },
+          onChanged: (value) => setState(() {}),
           decoration: InputDecoration(
-            hintText: hintText,
+            labelText: hintText,
             filled: true,
             fillColor: const Color(0xFFF0F2F5),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide.none,
+            ),
             suffixIcon: IconButton(
               icon: Icon(
                 isConfirmPassword
@@ -323,84 +291,21 @@ class _ServiceProviderRegistrationState
                 });
               },
             ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: BorderSide.none,
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: Color(0xFF2094F3), width: 2.0),
-            ),
-            contentPadding: const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
           ),
         ),
-      ),
-      if (!isConfirmPassword)
-        Padding(
-          padding: const EdgeInsets.only(top: 5),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                "Password must contain:",
-                style: TextStyle(color: Colors.grey, fontSize: 12),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                "• At least 8 characters",
-                style: TextStyle(
-                  color: _passwordController.text.length >= 8 ? Colors.green : Colors.grey,
-                  fontSize: 12,
-                ),
-              ),
-              Text(
-                "• At least one uppercase letter",
-                style: TextStyle(
-                  color: RegExp(r'[A-Z]').hasMatch(_passwordController.text)
-                      ? Colors.green
-                      : Colors.grey,
-                  fontSize: 12,
-                ),
-              ),
-              Text(
-                "• At least one lowercase letter",
-                style: TextStyle(
-                  color: RegExp(r'[a-z]').hasMatch(_passwordController.text)
-                      ? Colors.green
-                      : Colors.grey,
-                  fontSize: 12,
-                ),
-              ),
-              Text(
-                "• At least one number",
-                style: TextStyle(
-                  color: RegExp(r'[0-9]').hasMatch(_passwordController.text)
-                      ? Colors.green
-                      : Colors.grey,
-                  fontSize: 12,
-                ),
-              ),
-              Text(
-                "• At least one special character",
-                style: TextStyle(
-                  color: RegExp(r'[!@#$%^&*(),.?":{}|<>]').hasMatch(_passwordController.text)
-                      ? Colors.green
-                      : Colors.grey,
-                  fontSize: 12,
-                ),
-              ),
-            ],
+        if (!isConfirmPassword)
+          Column(
+            children: errorMessages.map((msg) {
+              return Row(
+                children: [
+                  const Icon(Icons.cancel, color: Colors.red, size: 16),
+                  const SizedBox(width: 5),
+                  Text(msg, style: const TextStyle(color: Colors.red, fontSize: 12)),
+                ],
+              );
+            }).toList(),
           ),
-        ),
-      if (isConfirmPassword && _confirmPasswordError.isNotEmpty)
-        Padding(
-          padding: const EdgeInsets.only(top: 5),
-          child: Text(
-            _confirmPasswordError,
-            style: const TextStyle(color: Colors.red, fontSize: 14),
-          ),
-        ),
-    ],
-  );
+      ],
+    );
+  }
 }
-    }

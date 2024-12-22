@@ -1,5 +1,3 @@
-// lib/forgot_password_screen.dart
-
 import 'package:flutter/material.dart';
 import 'verification_forgot_password.dart'; // Import the VerifyNumberScreen
 
@@ -33,41 +31,65 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Forgot Password'),
+        title: const Text(
+          'Forgot Password',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         backgroundColor: const Color(0xFF2094F3),
-        
-      )
-      ,
-      body: Center(
+        centerTitle: true,
+        elevation: 0,
+      ),
+      body: SingleChildScrollView(
         child: Padding(
-          padding: const EdgeInsets.all(20.0),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
+              // Image Section
               Container(
                 margin: const EdgeInsets.only(bottom: 20),
                 child: Image.asset(
-                  'images/padlock.png', // Replace with your image URL
+                  'images/padlock.png', // Replace with your image path
                   height: 150,
                   width: 150,
                   fit: BoxFit.contain,
                 ),
               ),
+
+              // Title Section
+              const Text(
+                'Forgot Password?',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 10),
               const Text(
                 'Please enter your phone number to receive a verification code.',
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 16),
+                style: TextStyle(fontSize: 16, color: Colors.grey),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 30),
+
+              // Phone Input Field
               TextFormField(
                 controller: phoneController,
-                decoration: const InputDecoration(
-                  hintText: 'Phone number',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: 'Phone Number',
+                  prefixIcon: const Icon(Icons.phone, color: Color(0xFF2094F3)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  filled: true,
+                  fillColor: const Color(0xFFF0F2F5),
+                  counterText: '',
                 ),
-                keyboardType: TextInputType.number,
-                maxLength: 10, // Set max length to 10 digits
+                keyboardType: TextInputType.phone,
+                maxLength: 10, // Max length for 10 digits
               ),
+
               if (warningMessage != null) ...[
                 const SizedBox(height: 5),
                 Text(
@@ -75,16 +97,29 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   style: const TextStyle(color: Colors.red, fontSize: 14),
                 ),
               ],
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: _validatePhoneNumber, // Call validation function
-                style: ElevatedButton.styleFrom(
-                  minimumSize: const Size(double.infinity, 50),
-                  backgroundColor: const Color(0xFF2094F3),
-                ),
-                child: const Text(
-                  'Send',
-                  style: TextStyle(color: Colors.white), // Set text color to white
+
+              const SizedBox(height: 30),
+
+              // Send Button
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _validatePhoneNumber,
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    backgroundColor: const Color(0xFF2094F3),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text(
+                    'Send Verification Code',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
               ),
             ],

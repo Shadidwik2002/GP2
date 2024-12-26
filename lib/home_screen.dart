@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
-import 'account_page.dart'; 
-import 'Provider_List.dart'; 
+import 'account_page.dart';
+import 'Provider_List.dart';
+import 'reschedule_screen.dart';
 
 class Appointment {
-  final String providerName;
-  final String issueDescription;
-  final String date;
-  final String time;
+  String providerName;
+  String issueDescription;
+  String date;
+  String time;
 
   Appointment({
     required this.providerName,
@@ -54,8 +55,26 @@ class _HomeScreenState extends State<HomeScreen> {
   void _addAppointment(Appointment appointment) {
     setState(() {
       _appointments.add(appointment);
-      _currentIndex = 1;
+      _currentIndex = 1; // Automatically switch to Schedule tab
     });
+  }
+
+  void _rescheduleAppointment(Appointment appointment) async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => RescheduleScreen(appointment: appointment),
+      ),
+    );
+    if (result != null) {
+      setState(() {
+        appointment.date = result['date'];
+        appointment.time = result['time'];
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Booking rescheduled to ${appointment.date} at ${appointment.time}')),
+      );
+    }
   }
 
   @override
@@ -80,7 +99,26 @@ class _HomeScreenState extends State<HomeScreen> {
               )
             : Text(_currentIndex == 1 ? 'Schedule' : 'Account'),
       ),
-      body: _pages[_currentIndex],
+      body: IndexedStack(
+        index: _currentIndex,
+        children: [
+          // Services Page
+          ListView.builder(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
+            itemCount: _filteredServices.length,
+            itemBuilder: (context, index) {
+              final service = _filteredServices[index];
+              return _buildServiceCard(service['title']!, service['price']!, service['image']!, context);
+            },
+          ),
+
+          // Schedule Page
+          _buildSchedulePage(),
+
+          // Account Page
+          AccountPage(appointments: _appointments),
+        ],
+      ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         items: const [
@@ -93,21 +131,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  List<Widget> get _pages => [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
-          child: ListView.builder(
-            itemCount: _filteredServices.length,
-            itemBuilder: (context, index) {
-              final service = _filteredServices[index];
-              return _buildServiceCard(service['title']!, service['price']!, service['image']!, context);
-            },
-          ),
-        ),
-        _buildSchedulePage(),
-        const AccountPage(),
-      ];
-
   Widget _buildSchedulePage() {
     return _appointments.isEmpty
         ? const Center(child: Text('No appointments scheduled yet.'))
@@ -115,11 +138,19 @@ class _HomeScreenState extends State<HomeScreen> {
             itemCount: _appointments.length,
             itemBuilder: (context, index) {
               final appointment = _appointments[index];
-              return ListTile(
-                title: Text(appointment.providerName),
-                subtitle: Text('Issue: ${appointment.issueDescription}\nDate: ${appointment.date} at ${appointment.time}'),
-                leading: const Icon(Icons.event, color: Colors.blue),
-                trailing: const Icon(Icons.check_circle, color: Colors.green),
+              return Card(
+                margin: const EdgeInsets.all(10),
+                child: ListTile(
+                  title: Text(appointment.providerName),
+                  subtitle: Text(
+                    'Issue: ${appointment.issueDescription}\nDate: ${appointment.date} at ${appointment.time}',
+                  ),
+                  leading: const Icon(Icons.event, color: Colors.blue),
+                  trailing: TextButton(
+                    onPressed: () => _rescheduleAppointment(appointment),
+                    child: const Text('Reschedule'),
+                  ),
+                ),
               );
             },
           );

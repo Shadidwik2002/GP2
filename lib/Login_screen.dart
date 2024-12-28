@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // Import for filtering input
-import 'sign_up_screen.dart'; // Import the SignUpScreen
+import 'package:flutter/services.dart';
+import 'provider_dashboard.dart';
+import 'home_screen.dart';
 import 'forgot_password_screen.dart';
-import 'home_screen.dart'; // Import the ForgotPasswordScreen
+import 'sign_up_screen.dart';
+import 'account_type.dart'; // Import the new AccountTypeScreen file
 
 void main() {
   runApp(const MyApp());
@@ -31,13 +33,12 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
-  bool _isPasswordVisible = false; // Track password visibility
+  bool _isPasswordVisible = false;
   String? _phoneError;
   String? _passwordError;
 
   @override
   void dispose() {
-    // Dispose of controllers
     _phoneController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -64,11 +65,18 @@ class _LoginScreenState extends State<LoginScreen> {
     _validateFields();
 
     if (_phoneError == null && _passwordError == null) {
-      // Handle successful login here
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const HomeScreen()),
-      );
+      if (_phoneController.text == '1111111111' &&
+          _passwordController.text == '123') {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => ServiceProviderDashboard()),
+        );
+      } else {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const HomeScreen()),
+        );
+      }
     }
   }
 
@@ -79,33 +87,28 @@ class _LoginScreenState extends State<LoginScreen> {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // Header
             const Padding(
               padding: EdgeInsets.symmetric(vertical: 20),
               child: Text(
                 'ServiceHub',
                 style: TextStyle(
-                  fontSize: 20,
+                  fontSize: 24,
                   fontWeight: FontWeight.bold,
                   color: Color(0xFF111518),
                 ),
               ),
             ),
-
-            // Image
             Container(
               margin: const EdgeInsets.all(20),
-              height: 218,
+              height: 300,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(10),
                 image: const DecorationImage(
                   fit: BoxFit.cover,
-                  image: NetworkImage('https://cdn.usegalileo.ai/sdxl10/3a093c32-1284-4b6c-a777-1ed4deee4fa6.png'),
+                  image: AssetImage('images/Login.png'),
                 ),
               ),
             ),
-
-            // Welcome message
             const Padding(
               padding: EdgeInsets.all(8.0),
               child: Text(
@@ -118,8 +121,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 textAlign: TextAlign.center,
               ),
             ),
-
-            // Phone Number Field
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
               child: Column(
@@ -129,9 +130,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     controller: _phoneController,
                     keyboardType: TextInputType.phone,
                     maxLength: 10,
-                    inputFormatters: [
-                      FilteringTextInputFormatter.digitsOnly,
-                    ],
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                     decoration: const InputDecoration(
                       hintText: 'Phone Number',
                       filled: true,
@@ -154,8 +153,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 ],
               ),
             ),
-
-            // Password Field
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
               child: Column(
@@ -174,7 +171,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       suffixIcon: IconButton(
                         icon: Icon(
-                          _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                          _isPasswordVisible
+                              ? Icons.visibility
+                              : Icons.visibility_off,
                           color: const Color(0xFF60778A),
                         ),
                         onPressed: () {
@@ -196,13 +195,12 @@ class _LoginScreenState extends State<LoginScreen> {
                 ],
               ),
             ),
-
-            // Forgot password text
             GestureDetector(
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const ForgotPasswordScreen()),
+                  MaterialPageRoute(
+                      builder: (context) => const ForgotPasswordScreen()),
                 );
               },
               child: const Padding(
@@ -216,41 +214,33 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
             ),
-
-            // Log In button
             Padding(
               padding: const EdgeInsets.all(20),
-              child: Column(
-                children: [
-                  ElevatedButton(
-                    onPressed: _login,
-                    style: ElevatedButton.styleFrom(
-                      minimumSize: const Size(double.infinity, 50),
-                      backgroundColor: const Color(0xFF2094F3),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                    child: const Text(
-                      'Log in',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
+              child: ElevatedButton(
+                onPressed: _login,
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 50),
+                  backgroundColor: const Color(0xFF2094F3),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
                   ),
-                  const SizedBox(height: 10),
-                ],
+                ),
+                child: const Text(
+                  'Log in',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
               ),
             ),
-
-            // Don't have an account text
             GestureDetector(
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const SignUpScreen()),
+                  MaterialPageRoute(
+                      builder: (context) => const AccountTypeScreen()),
                 );
               },
               child: const Padding(

@@ -81,6 +81,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false, // Removes the back arrow
         backgroundColor: Colors.white,
         elevation: 0,
         title: _currentIndex == 0

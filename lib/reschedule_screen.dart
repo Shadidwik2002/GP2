@@ -4,7 +4,7 @@ import 'home_screen.dart';
 class RescheduleScreen extends StatefulWidget {
   final Appointment appointment;
 
-  const RescheduleScreen({Key? key, required this.appointment}) : super(key: key);
+  const RescheduleScreen({super.key, required this.appointment});
 
   @override
   _RescheduleScreenState createState() => _RescheduleScreenState();

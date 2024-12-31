@@ -3,8 +3,9 @@ import 'package:flutter/services.dart';
 import 'provider_dashboard.dart';
 import 'home_screen.dart';
 import 'forgot_password_screen.dart';
-import 'sign_up_screen.dart';
 import 'account_type.dart'; // Import the new AccountTypeScreen file
+import 'admin_dashboard.dart';
+
 
 void main() {
   runApp(const MyApp());
@@ -62,23 +63,33 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _login() {
-    _validateFields();
+  _validateFields();
 
-    if (_phoneError == null && _passwordError == null) {
-      if (_phoneController.text == '1111111111' &&
-          _passwordController.text == '123') {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => ServiceProviderDashboard()),
-        );
-      } else {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const HomeScreen()),
-        );
-      }
+  if (_phoneError == null && _passwordError == null) {
+    if (_phoneController.text == '1111111111' &&
+        _passwordController.text == '123') {
+      // Navigate to Service Provider Dashboard
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => ServiceProviderDashboard()),
+      );
+    } else if (_phoneController.text == '2222222222' &&
+        _passwordController.text == '123') {
+      // Navigate to Admin Dashboard
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => AdminDashboard()),
+      );
+    } else {
+      // Navigate to Home Screen
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
+      );
     }
   }
+}
+
 
   @override
   Widget build(BuildContext context) {

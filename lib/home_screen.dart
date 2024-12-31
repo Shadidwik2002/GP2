@@ -26,6 +26,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final List<Appointment> _appointments = [];
+  final List<Appointment> _allAppointments = []; // List to maintain history
   final List<Map<String, String>> _services = [
     {'title': 'House Cleaning', 'price': '15 JD', 'image': 'images/house_cleaning.jpg'},
     {'title': 'Plumbing', 'price': '8 JD', 'image': 'images/plumbing.jpg'},
@@ -55,6 +56,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void _addAppointment(Appointment appointment) {
     setState(() {
       _appointments.add(appointment);
+      _allAppointments.add(appointment); // Add to history
       _currentIndex = 1; // Automatically switch to Schedule tab
     });
   }
@@ -75,6 +77,15 @@ class _HomeScreenState extends State<HomeScreen> {
         SnackBar(content: Text('Booking rescheduled to ${appointment.date} at ${appointment.time}')),
       );
     }
+  }
+
+  void _cancelAppointment(Appointment appointment) {
+    setState(() {
+      _appointments.remove(appointment); // Remove from current schedule
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Appointment canceled')),
+    );
   }
 
   @override
@@ -117,7 +128,7 @@ class _HomeScreenState extends State<HomeScreen> {
           _buildSchedulePage(),
 
           // Account Page
-          AccountPage(appointments: _appointments),
+          AccountPage(appointments: _allAppointments), // Pass all appointments to history
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
@@ -141,15 +152,32 @@ class _HomeScreenState extends State<HomeScreen> {
               final appointment = _appointments[index];
               return Card(
                 margin: const EdgeInsets.all(10),
-                child: ListTile(
-                  title: Text(appointment.providerName),
-                  subtitle: Text(
-                    'Issue: ${appointment.issueDescription}\nDate: ${appointment.date} at ${appointment.time}',
-                  ),
-                  leading: const Icon(Icons.event, color: Colors.blue),
-                  trailing: TextButton(
-                    onPressed: () => _rescheduleAppointment(appointment),
-                    child: const Text('Reschedule'),
+                child: Padding(
+                  padding: const EdgeInsets.all(10),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      ListTile(
+                        title: Text(appointment.providerName),
+                        subtitle: Text(
+                          'Issue: ${appointment.issueDescription}\nDate: ${appointment.date} at ${appointment.time}',
+                        ),
+                        leading: const Icon(Icons.event, color: Colors.blue),
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          TextButton(
+                            onPressed: () => _rescheduleAppointment(appointment),
+                            child: const Text('Reschedule'),
+                          ),
+                          TextButton(
+                            onPressed: () => _cancelAppointment(appointment),
+                            child: const Text('Cancel', style: TextStyle(color: Colors.red)),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
               );

@@ -68,9 +68,9 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Center(
+            const Center(
               child: Column(
-                children: const [
+                children: [
                   CircleAvatar(
                     radius: 50,
                     backgroundImage: AssetImage('images/profile.png'),

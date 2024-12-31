@@ -8,8 +8,8 @@ class AccountTypeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Define the blue color scheme
-    final primaryBlue = Color(0xFF2196F3); // Material Blue
-    final lightBlue = Color(0xFFE3F2FD); // Very light blue for gradient
+    final primaryBlue = const Color(0xFF2196F3); // Material Blue
+    final lightBlue = const Color(0xFFE3F2FD); // Very light blue for gradient
 
     return Scaffold(
       appBar: AppBar(

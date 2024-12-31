@@ -3,6 +3,8 @@ import 'EditProfileScreen.dart';
 import 'Login_screen.dart';
 import 'history_screen.dart';
 import 'home_screen.dart';
+import 'payment.dart'; 
+import 'location_screen.dart';
 
 class AccountPage extends StatelessWidget {
   final List<Appointment> appointments;
@@ -49,7 +51,7 @@ class AccountPage extends StatelessWidget {
           ),
           const SizedBox(height: 24),
 
-          // Settings Section
+          // History Button
           ListTile(
             leading: const Icon(Icons.history, color: Colors.black),
             title: const Text('History'),
@@ -57,11 +59,28 @@ class AccountPage extends StatelessWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => HistoryScreen(appointments: appointments),
+                  builder: (context) =>
+                      HistoryScreen(appointments: appointments),
                 ),
               );
             },
           ),
+
+          // Payment Button
+          ListTile(
+            leading: const Icon(Icons.payment, color: Colors.black),
+            title: const Text('Payments'),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const PaymentScreen(), // Navigate to PaymentScreen
+                ),
+              );
+            },
+          ),
+
+          // Sign Out Button
           ListTile(
             leading: const Icon(Icons.logout, color: Colors.black),
             title: const Text('Sign Out'),

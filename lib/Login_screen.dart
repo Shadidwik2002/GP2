@@ -71,14 +71,14 @@ class _LoginScreenState extends State<LoginScreen> {
       // Navigate to Service Provider Dashboard
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => ServiceProviderDashboard()),
+        MaterialPageRoute(builder: (context) => const ServiceProviderDashboard()),
       );
     } else if (_phoneController.text == '2222222222' &&
         _passwordController.text == '123') {
       // Navigate to Admin Dashboard
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => AdminDashboard()),
+        MaterialPageRoute(builder: (context) => const AdminDashboard()),
       );
     } else {
       // Navigate to Home Screen

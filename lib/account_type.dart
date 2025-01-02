@@ -8,8 +8,8 @@ class AccountTypeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Define the blue color scheme
-    final primaryBlue = const Color(0xFF2196F3); // Material Blue
-    final lightBlue = const Color(0xFFE3F2FD); // Very light blue for gradient
+    const primaryBlue = Color(0xFF2196F3); // Material Blue
+    const lightBlue = Color(0xFFE3F2FD); // Very light blue for gradient
 
     return Scaffold(
       appBar: AppBar(
@@ -26,7 +26,7 @@ class AccountTypeScreen extends StatelessWidget {
         backgroundColor: primaryBlue,
       ),
       body: Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
@@ -43,7 +43,7 @@ class AccountTypeScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const Spacer(),
-                Text(
+                const Text(
                   'Welcome!',
                   style: TextStyle(
                     fontSize: 32,

@@ -1,15 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart'; // Import LatLng
 import 'EditProfileScreen.dart';
 import 'Login_screen.dart';
 import 'history_screen.dart';
 import 'home_screen.dart';
-import 'payment.dart'; 
-import 'location_screen.dart';
+import 'payment.dart';
+import 'location_screen.dart'; // Import LocationScreen
 
-class AccountPage extends StatelessWidget {
+class AccountPage extends StatefulWidget {
   final List<Appointment> appointments;
 
   const AccountPage({super.key, required this.appointments});
+
+  @override
+  _AccountPageState createState() => _AccountPageState();
+}
+
+class _AccountPageState extends State<AccountPage> {
+  LatLng? _lastSavedLocation; // Variable to store the last saved location
 
   @override
   Widget build(BuildContext context) {
@@ -60,7 +68,7 @@ class AccountPage extends StatelessWidget {
                 context,
                 MaterialPageRoute(
                   builder: (context) =>
-                      HistoryScreen(appointments: appointments),
+                      HistoryScreen(appointments: widget.appointments),
                 ),
               );
             },
@@ -77,6 +85,37 @@ class AccountPage extends StatelessWidget {
                   builder: (context) => const PaymentScreen(), // Navigate to PaymentScreen
                 ),
               );
+            },
+          ),
+
+          // Location Button
+          ListTile(
+            leading: const Icon(Icons.location_on, color: Colors.black),
+            title: const Text('Location'),
+            onTap: () async {
+              final LatLng? selectedLocation = await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => LocationScreen(
+                    initialLocation: _lastSavedLocation ?? const LatLng(31.9539, 35.9106), // Default to Amman
+                  ),
+                ),
+              );
+
+              if (selectedLocation != null) {
+                setState(() {
+                  _lastSavedLocation = selectedLocation; // Update the last saved location
+                });
+
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      'Location saved: ${_lastSavedLocation!.latitude}, ${_lastSavedLocation!.longitude}',
+                    ),
+                    duration: const Duration(seconds: 2),
+                  ),
+                );
+              }
             },
           ),
 

@@ -39,51 +39,6 @@ class _ManageAccountsPageState extends State<ManageAccountsPage> {
       'id': 'SP004',
       'service': 'Electrician',
     },
-    {
-      'name': 'Sarah Wilson',
-      'status': 'Inactive',
-      'type': 'User',
-      'phone': '3344556677',
-      'id': 'U005',
-    },
-    {
-      'name': 'James Brown',
-      'status': 'Active',
-      'type': 'Service Provider',
-      'phone': '4455667788',
-      'id': 'SP006',
-      'service': 'House Cleaning',
-    },
-    {
-      'name': 'Linda Taylor',
-      'status': 'Active',
-      'type': 'User',
-      'phone': '5566778899',
-      'id': 'U007',
-    },
-    {
-      'name': 'David Anderson',
-      'status': 'Inactive',
-      'type': 'Service Provider',
-      'phone': '6677889900',
-      'id': 'SP008',
-      'service': 'Home Device Maintenance',
-    },
-    {
-      'name': 'Sophia Thomas',
-      'status': 'Active',
-      'type': 'User',
-      'phone': '7788990011',
-      'id': 'U009',
-    },
-    {
-      'name': 'Robert Martinez',
-      'status': 'Active',
-      'type': 'Service Provider',
-      'phone': '8899001122',
-      'id': 'SP010',
-      'service': 'Electrician',
-    },
   ];
 
   String _searchQuery = '';
@@ -129,45 +84,58 @@ class _ManageAccountsPageState extends State<ManageAccountsPage> {
     );
   }
 
-  void _viewUserDetails(BuildContext context, Map<String, String> user) {
+  void _editUserDetails(BuildContext context, int index) {
+    final user = _users[index];
+    final TextEditingController nameController = TextEditingController(text: user['name']);
+    final TextEditingController phoneController = TextEditingController(text: user['phone']);
+    final TextEditingController serviceController = TextEditingController(text: user['service'] ?? '');
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text("${user['name']}'s Details"),
-        content: SizedBox(
-          width: double.maxFinite,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              ListTile(
-                leading: const Icon(Icons.person_outline),
-                title: const Text('Type'),
-                subtitle: Text(user['type'] ?? ''),
+        title: Text('Edit Details for ${user['name']}'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameController,
+              decoration: const InputDecoration(labelText: 'Name'),
+            ),
+            TextField(
+              controller: phoneController,
+              decoration: const InputDecoration(labelText: 'Phone'),
+              keyboardType: TextInputType.phone,
+            ),
+            if (user['type'] == 'Service Provider')
+              TextField(
+                controller: serviceController,
+                decoration: const InputDecoration(labelText: 'Service'),
               ),
-              ListTile(
-                leading: const Icon(Icons.phone_outlined),
-                title: const Text('Phone'),
-                subtitle: Text(user['phone'] ?? ''),
-              ),
-              ListTile(
-                leading: const Icon(Icons.badge_outlined),
-                title: const Text('ID'),
-                subtitle: Text(user['id'] ?? ''),
-              ),
-              if (user['type'] == 'Service Provider')
-                ListTile(
-                  leading: const Icon(Icons.work_outline),
-                  title: const Text('Service'),
-                  subtitle: Text(user['service'] ?? 'Not Specified'),
-                ),
-            ],
-          ),
+          ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Close', style: TextStyle(color: Colors.grey[700])),
+            child: Text('Cancel', style: TextStyle(color: Colors.grey[700])),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              setState(() {
+                _users[index]['name'] = nameController.text;
+                _users[index]['phone'] = phoneController.text;
+                if (user['type'] == 'Service Provider') {
+                  _users[index]['service'] = serviceController.text;
+                }
+              });
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('User details updated successfully!'),
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+            },
+            child: const Text('Save'),
           ),
         ],
       ),
@@ -176,10 +144,11 @@ class _ManageAccountsPageState extends State<ManageAccountsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final filteredUsers = _users
-        .where((user) =>
-            user['name']!.toLowerCase().contains(_searchQuery.toLowerCase()))
-        .toList();
+    final filteredUsers = _users.where((user) {
+      final query = _searchQuery.toLowerCase();
+      return user['name']!.toLowerCase().contains(query) ||
+          user['phone']!.toLowerCase().contains(query);
+    }).toList();
 
     return Scaffold(
       appBar: AppBar(
@@ -200,7 +169,7 @@ class _ManageAccountsPageState extends State<ManageAccountsPage> {
             },
             decoration: InputDecoration(
               prefixIcon: Icon(Icons.search, color: Colors.grey[600]),
-              hintText: 'Search users',
+              hintText: 'Search users by name or phone',
               border: InputBorder.none,
               contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               hintStyle: TextStyle(color: Colors.grey[600]),
@@ -269,27 +238,24 @@ class _ManageAccountsPageState extends State<ManageAccountsPage> {
                         ),
                       ],
                     ),
-                    trailing: TextButton(
-                      onPressed: () {
-                        if (user['status'] == 'Active') {
-                          _changeUserStatus(context, index, 'Inactive');
-                        } else {
-                          _changeUserStatus(context, index, 'Active');
+                    trailing: PopupMenuButton<String>(
+                      onSelected: (value) {
+                        if (value == 'Edit') {
+                          _editUserDetails(context, index);
+                        } else if (value == 'Toggle Status') {
+                          _changeUserStatus(
+                            context,
+                            _users.indexOf(user),
+                            user['status'] == 'Active' ? 'Inactive' : 'Active',
+                          );
                         }
                       },
-                      style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                      ),
-                      child: Text(
-                        user['status'] == 'Active' ? 'Deactivate' : 'Activate',
-                        style: TextStyle(
-                          color: user['status'] == 'Active'
-                              ? Colors.red
-                              : Colors.green,
-                        ),
-                      ),
+                      itemBuilder: (context) => [
+                        const PopupMenuItem(value: 'Edit', child: Text('Edit')),
+                        const PopupMenuItem(value: 'Toggle Status', child: Text('Toggle Status')),
+                      ],
                     ),
-                    onTap: () => _viewUserDetails(context, user),
+                    onTap: () => _editUserDetails(context, index),
                   ),
                 );
               },

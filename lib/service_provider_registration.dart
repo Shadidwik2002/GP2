@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class ServiceProviderRegistration extends StatefulWidget {
   const ServiceProviderRegistration({super.key});
@@ -8,40 +9,39 @@ class ServiceProviderRegistration extends StatefulWidget {
       _ServiceProviderRegistrationState();
 }
 
-class _ServiceProviderRegistrationState
-    extends State<ServiceProviderRegistration> {
-  final TextEditingController _businessNameController = TextEditingController();
-  final TextEditingController _contactPersonController =
-      TextEditingController();
+class _ServiceProviderRegistrationState extends State<ServiceProviderRegistration> {
+  final TextEditingController _firstNameController = TextEditingController();
+  final TextEditingController _lastNameController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _serviceTypeController = TextEditingController();
-  final TextEditingController _licenseNumberController =
-      TextEditingController();
-  final TextEditingController _businessAddressController =
-      TextEditingController();
+  final TextEditingController _licenseNumberController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController =
-      TextEditingController();
+  final TextEditingController _confirmPasswordController = TextEditingController();
 
+  final List<String> _serviceTypes = [
+    'Electrician',
+    'Plumber',
+    'House Cleaning',
+    'Home Device Maintenance'
+  ];
+  final List<String> _selectedServiceTypes = [];
+
+  String _firstNameError = '';
+  String _lastNameError = '';
   String _phoneError = '';
-  String _emailError = '';
   String _licenseError = '';
-  String _addressError = '';
+  String _serviceTypeError = '';
   String _confirmPasswordError = '';
   final List<String> _passwordErrors = [];
   bool _isPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
+  bool _isDropdownOpen = false;
 
   @override
   void dispose() {
-    _businessNameController.dispose();
-    _contactPersonController.dispose();
+    _firstNameController.dispose();
+    _lastNameController.dispose();
     _phoneController.dispose();
-    _emailController.dispose();
-    _serviceTypeController.dispose();
     _licenseNumberController.dispose();
-    _businessAddressController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
@@ -49,23 +49,28 @@ class _ServiceProviderRegistrationState
 
   void _validateInputs() {
     setState(() {
+      _firstNameError = '';
+      _lastNameError = '';
       _phoneError = '';
-      _emailError = '';
       _licenseError = '';
-      _addressError = '';
+      _serviceTypeError = '';
       _passwordErrors.clear();
       _confirmPasswordError = '';
+
+      // First Name validation
+      if (_firstNameController.text.isEmpty) {
+        _firstNameError = 'First name cannot be empty';
+      }
+
+      // Last Name validation
+      if (_lastNameController.text.isEmpty) {
+        _lastNameError = 'Last name cannot be empty';
+      }
 
       // Phone validation
       String phoneText = _phoneController.text;
       if (phoneText.isEmpty || phoneText.length != 10) {
-        _phoneError = 'Please enter a valid phone number';
-      }
-
-      // Email validation
-      String emailText = _emailController.text;
-      if (emailText.isEmpty || !emailText.contains('@')) {
-        _emailError = 'Please enter a valid email address';
+        _phoneError = 'Please enter a valid 10-digit phone number';
       }
 
       // License validation
@@ -73,9 +78,11 @@ class _ServiceProviderRegistrationState
         _licenseError = 'Please enter your business license number';
       }
 
-      // Address validation
-      if (_businessAddressController.text.isEmpty) {
-        _addressError = 'Please enter your business address';
+      // Service Type validation - Made more strict
+      if (_selectedServiceTypes.isEmpty) {
+        _serviceTypeError = 'Please select at least one service type';
+        // Force the dropdown to stay open if no service is selected
+        _isDropdownOpen = true;
       }
 
       // Password validation
@@ -103,8 +110,7 @@ class _ServiceProviderRegistrationState
       // Confirm Password validation
       if (_confirmPasswordController.text.isEmpty) {
         _confirmPasswordError = 'Please confirm your password';
-      } else if (_passwordController.text !=
-          _confirmPasswordController.text) {
+      } else if (_passwordController.text != _confirmPasswordController.text) {
         _confirmPasswordError = 'Passwords do not match!';
       }
     });
@@ -113,12 +119,15 @@ class _ServiceProviderRegistrationState
   void _submitRegistration() {
     _validateInputs();
 
-    if (_phoneError.isEmpty &&
-        _emailError.isEmpty &&
+    // Only proceed if all validations pass and at least one service type is selected
+    if (_firstNameError.isEmpty &&
+        _lastNameError.isEmpty &&
+        _phoneError.isEmpty &&
         _licenseError.isEmpty &&
-        _addressError.isEmpty &&
+        _serviceTypeError.isEmpty &&
         _passwordErrors.isEmpty &&
-        _confirmPasswordError.isEmpty) {
+        _confirmPasswordError.isEmpty &&
+        _selectedServiceTypes.isNotEmpty) {
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
@@ -154,25 +163,27 @@ class _ServiceProviderRegistrationState
               style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 20),
-            _buildTextField('Business Name', _businessNameController),
+            _buildTextField(
+              'First Name',
+              _firstNameController,
+              errorMessage: _firstNameError,
+              inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z]'))],
+            ),
             const SizedBox(height: 15),
-            _buildTextField('Contact Person', _contactPersonController),
+            _buildTextField(
+              'Last Name',
+              _lastNameController,
+              errorMessage: _lastNameError,
+              inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z]'))],
+            ),
             const SizedBox(height: 15),
             _buildTextField(
               'Phone Number',
               _phoneController,
               errorMessage: _phoneError,
               keyboardType: TextInputType.phone,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(10)],
             ),
-            const SizedBox(height: 15),
-            _buildTextField(
-              'Email Address',
-              _emailController,
-              errorMessage: _emailError,
-              keyboardType: TextInputType.emailAddress,
-            ),
-            const SizedBox(height: 15),
-            _buildTextField('Service Type', _serviceTypeController),
             const SizedBox(height: 15),
             _buildTextField(
               'Business License Number',
@@ -180,10 +191,102 @@ class _ServiceProviderRegistrationState
               errorMessage: _licenseError,
             ),
             const SizedBox(height: 15),
-            _buildTextField(
-              'Business Address',
-              _businessAddressController,
-              errorMessage: _addressError,
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Text(
+                      'Service Type',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(width: 5),
+                    const Text(
+                      '*',
+                      style: TextStyle(color: Colors.red, fontSize: 16),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 5),
+                GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _isDropdownOpen = !_isDropdownOpen;
+                    });
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF0F2F5),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: _serviceTypeError.isNotEmpty ? Colors.red : Colors.grey,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            _selectedServiceTypes.isEmpty
+                                ? 'Select Service Types (Required)'
+                                : _selectedServiceTypes.join(', '),
+                            style: TextStyle(
+                              color: _selectedServiceTypes.isEmpty
+                                  ? Colors.grey
+                                  : Colors.black,
+                            ),
+                          ),
+                        ),
+                        Icon(_isDropdownOpen
+                            ? Icons.arrow_drop_up
+                            : Icons.arrow_drop_down),
+                      ],
+                    ),
+                  ),
+                ),
+                if (_isDropdownOpen)
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF0F2F5),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: _serviceTypeError.isNotEmpty ? Colors.red : Colors.grey,
+                      ),
+                    ),
+                    child: Column(
+                      children: _serviceTypes.map((type) {
+                        return CheckboxListTile(
+                          title: Text(type),
+                          value: _selectedServiceTypes.contains(type),
+                          onChanged: (isSelected) {
+                            setState(() {
+                              if (isSelected == true) {
+                                _selectedServiceTypes.add(type);
+                                _serviceTypeError = ''; // Clear error when service is selected
+                              } else {
+                                _selectedServiceTypes.remove(type);
+                                // Show error if last service type is unselected
+                                if (_selectedServiceTypes.isEmpty) {
+                                  _serviceTypeError = 'Please select at least one service type';
+                                }
+                              }
+                            });
+                          },
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                if (_serviceTypeError.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 5),
+                    child: Text(
+                      _serviceTypeError,
+                      style: const TextStyle(color: Colors.red, fontSize: 14),
+                    ),
+                  ),
+              ],
             ),
             const SizedBox(height: 15),
             _buildPasswordField('Password', _passwordController, _passwordErrors),
@@ -191,7 +294,7 @@ class _ServiceProviderRegistrationState
             _buildPasswordField(
               'Confirm Password',
               _confirmPasswordController,
-              [],
+              [_confirmPasswordError],
               isConfirmPassword: true,
             ),
             const SizedBox(height: 20),
@@ -225,6 +328,7 @@ class _ServiceProviderRegistrationState
     TextEditingController controller, {
     String errorMessage = '',
     TextInputType keyboardType = TextInputType.text,
+    List<TextInputFormatter>? inputFormatters,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -232,6 +336,7 @@ class _ServiceProviderRegistrationState
         TextFormField(
           controller: controller,
           keyboardType: keyboardType,
+          inputFormatters: inputFormatters,
           decoration: InputDecoration(
             labelText: hintText,
             filled: true,
@@ -244,7 +349,7 @@ class _ServiceProviderRegistrationState
         ),
         if (errorMessage.isNotEmpty)
           Padding(
-            padding: const EdgeInsets.only(top: 5),
+             padding: const EdgeInsets.only(top: 5),
             child: Text(
               errorMessage,
               style: const TextStyle(color: Colors.red, fontSize: 14),
@@ -266,7 +371,15 @@ class _ServiceProviderRegistrationState
         TextFormField(
           controller: controller,
           obscureText: isConfirmPassword ? !_isConfirmPasswordVisible : !_isPasswordVisible,
-          onChanged: (value) => setState(() {}),
+          onChanged: (value) {
+            if (isConfirmPassword) {
+              setState(() {
+                _confirmPasswordError = value != _passwordController.text 
+                    ? 'Passwords do not match!' 
+                    : '';
+              });
+            }
+          },
           decoration: InputDecoration(
             labelText: hintText,
             filled: true,
@@ -294,18 +407,31 @@ class _ServiceProviderRegistrationState
           ),
         ),
         if (!isConfirmPassword)
-          Column(
-            children: errorMessages.map((msg) {
-              return Row(
+          ...errorMessages.map((msg) {
+            return Padding(
+              padding: const EdgeInsets.only(top: 5),
+              child: Row(
                 children: [
-                  const Icon(Icons.cancel, color: Colors.red, size: 16),
+                  const Icon(Icons.error, color: Colors.red, size: 16),
                   const SizedBox(width: 5),
                   Text(msg, style: const TextStyle(color: Colors.red, fontSize: 12)),
                 ],
-              );
-            }).toList(),
+              ),
+            );
+          }).toList(),
+        if (isConfirmPassword && _confirmPasswordError.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: 5),
+            child: Row(
+              children: [
+                const Icon(Icons.error, color: Colors.red, size: 16),
+                const SizedBox(width: 5),
+                Text(_confirmPasswordError, 
+                    style: const TextStyle(color: Colors.red, fontSize: 12)),
+              ],
+            ),
           ),
       ],
     );
-  }
-}
+  } }
+          

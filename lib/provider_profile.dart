@@ -14,6 +14,7 @@ class ProviderProfilePage extends StatefulWidget {
 class _ProviderProfilePageState extends State<ProviderProfilePage> {
   String aboutText =
       'I have been doing maintenance for the last 3 years. I am a perfectionist and take pride in my work. I am very detail-oriented.';
+  final double averageRating = 4.5; // Example average rating value
 
   void _editAbout(BuildContext context) {
     final TextEditingController aboutController =
@@ -55,11 +56,6 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
     );
   }
 
-  void _handleSignOut(BuildContext context) {
-    // Navigate to login screen and remove all previous routes
-    Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
-  }
-
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
@@ -79,6 +75,30 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
                   Text(
                     'Service Provider',
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 8),
+
+            // Average Rating
+            Center(
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.star, color: Colors.amber, size: 24),
+                  const SizedBox(width: 4),
+                  Text(
+                    averageRating.toStringAsFixed(1),
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  const Text(
+                    '(Avg. Rating)',
+                    style: TextStyle(fontSize: 16, color: Colors.grey),
                   ),
                 ],
               ),

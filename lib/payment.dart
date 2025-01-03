@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 class PaymentScreen extends StatefulWidget {
   const PaymentScreen({super.key});
@@ -11,30 +10,6 @@ class PaymentScreen extends StatefulWidget {
 class _PaymentScreenState extends State<PaymentScreen> {
   String? _selectedPaymentMethod;
   bool _isProcessing = false;
-  bool _isPaymentSuccessful = false;
-
-  final TextEditingController _cardHolderController = TextEditingController();
-  final TextEditingController _cardNumberController = TextEditingController();
-  final TextEditingController _expiryDateController = TextEditingController();
-  final TextEditingController _cvvController = TextEditingController();
-
-  bool _isValidExpiryDate() {
-    if (_expiryDateController.text.isEmpty) return false;
-
-    final parts = _expiryDateController.text.split('/');
-    if (parts.length != 2) return false;
-
-    final month = int.tryParse(parts[0]);
-    final year = int.tryParse(parts[1]);
-
-    if (month == null || year == null) return false;
-
-    final now = DateTime.now();
-    final currentYear = now.year;
-    final currentMonth = now.month;
-
-    return year > currentYear || (year == currentYear && month >= currentMonth);
-  }
 
   void _submitPayment() async {
     if (_selectedPaymentMethod == null) {
@@ -45,40 +20,12 @@ class _PaymentScreenState extends State<PaymentScreen> {
     }
 
     if (_selectedPaymentMethod == 'Credit Card') {
-      if (_cardHolderController.text.isEmpty ||
-          _cardNumberController.text.isEmpty ||
-          _expiryDateController.text.isEmpty ||
-          _cvvController.text.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Please fill in all credit card details')),
-        );
-        return;
-      }
-      if (_cardNumberController.text.length != 16) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Card number must be 16 digits')),
-        );
-        return;
-      }
-      if (_cvvController.text.length != 3) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('CVV must be 3 digits')),
-        );
-        return;
-      }
-      if (!_expiryDateController.text.contains('/') ||
-          _expiryDateController.text.length != 7) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Expiry date must be in MM/YYYY format')),
-        );
-        return;
-      }
-      if (!_isValidExpiryDate()) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Card has expired')),
-        );
-        return;
-      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Credit Card payment is not available yet.'),
+        ),
+      );
+      return;
     }
 
     setState(() {
@@ -89,7 +36,6 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
     setState(() {
       _isProcessing = false;
-      _isPaymentSuccessful = true;
     });
 
     ScaffoldMessenger.of(context).showSnackBar(
@@ -122,12 +68,20 @@ class _PaymentScreenState extends State<PaymentScreen> {
                 value: _selectedPaymentMethod,
                 hint: const Text('Select Payment Method'),
                 isExpanded: true,
-                items: ['Cash', 'Credit Card']
-                    .map((method) => DropdownMenuItem<String>(
-                          value: method,
-                          child: Text(method),
-                        ))
-                    .toList(),
+                items: [
+                  DropdownMenuItem(
+                    value: 'Cash',
+                    child: const Text('Cash'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'Credit Card',
+                    child: Text(
+                      'Credit Card (Unavailable)',
+                      style: TextStyle(color: Colors.grey[500]),
+                    ),
+                    enabled: false, // Disabled for future implementation
+                  ),
+                ],
                 onChanged: (value) {
                   setState(() {
                     _selectedPaymentMethod = value;
@@ -135,73 +89,6 @@ class _PaymentScreenState extends State<PaymentScreen> {
                 },
               ),
               const SizedBox(height: 24),
-              if (_selectedPaymentMethod == 'Credit Card') ...[
-                const Text(
-                  'Enter Credit Card Details:',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: _cardHolderController,
-                  decoration: const InputDecoration(
-                    labelText: 'Cardholder Name',
-                    border: OutlineInputBorder(),
-                  ),
-                  inputFormatters: [
-                    FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z\s]')),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: _cardNumberController,
-                  decoration: const InputDecoration(
-                    labelText: 'Card Number',
-                    border: OutlineInputBorder(),
-                  ),
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [
-                    FilteringTextInputFormatter.digitsOnly,
-                    LengthLimitingTextInputFormatter(16),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: _expiryDateController,
-                        decoration: const InputDecoration(
-                          labelText: 'Expiry Date',
-                          border: OutlineInputBorder(),
-                          hintText: 'MM/YYYY',
-                        ),
-                        keyboardType: TextInputType.number,
-                        inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly,
-                          _ExpiryDateFormatter(),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: TextField(
-                        controller: _cvvController,
-                        decoration: const InputDecoration(
-                          labelText: 'CVV',
-                          border: OutlineInputBorder(),
-                        ),
-                        keyboardType: TextInputType.number,
-                        inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly,
-                          LengthLimitingTextInputFormatter(3),
-                        ],
-                        obscureText: true,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 24),
-              ],
               ElevatedButton(
                 onPressed: _isProcessing ? null : _submitPayment,
                 style: ElevatedButton.styleFrom(
@@ -218,51 +105,6 @@ class _PaymentScreenState extends State<PaymentScreen> {
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _ExpiryDateFormatter extends TextInputFormatter {
-  @override
-  TextEditingValue formatEditUpdate(
-    TextEditingValue oldValue,
-    TextEditingValue newValue,
-  ) {
-    String text = newValue.text.replaceAll('/', '');
-    final cursorPosition = newValue.selection.start;
-
-    if (oldValue.text.length > newValue.text.length) {
-      if (oldValue.text.length == 3 && oldValue.text.contains('/')) {
-        text = text.substring(0, text.length - 1);
-      }
-      return TextEditingValue(
-        text: text.length <= 2 ? text : '${text.substring(0, 2)}/${text.substring(2)}',
-        selection: TextSelection.collapsed(
-          offset: cursorPosition,
-        ),
-      );
-    }
-
-    if (text.length >= 2) {
-      int month = int.tryParse(text.substring(0, 2)) ?? 0;
-      if (month == 0) {
-        text = '01${text.substring(2)}';
-      } else if (month > 12) {
-        text = '12${text.substring(2)}';
-      }
-
-      text = '${text.substring(0, 2)}/${text.substring(2)}';
-
-      if (text.length > 7) {
-        text = text.substring(0, 7);
-      }
-    }
-
-    return TextEditingValue(
-      text: text,
-      selection: TextSelection.collapsed(
-        offset: text.length,
       ),
     );
   }

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'admin_manage_accounts.dart';
 import 'login_screen.dart';
 
-
 class AdminDashboard extends StatefulWidget {
   const AdminDashboard({super.key});
 
@@ -12,15 +11,16 @@ class AdminDashboard extends StatefulWidget {
 
 class _AdminDashboardState extends State<AdminDashboard> {
   final List<Map<String, dynamic>> _services = [
-    {'name': 'House Cleaning', 'price': '15 JD'},
-    {'name': 'Plumbing', 'price': '8 JD'},
-    {'name': 'Electrical', 'price': '15 JD'},
-    {'name': 'Home devices maintenance', 'price': '10 JD'}
+    {'name': 'House Cleaning', 'price': '15 JD', 'description': 'Professional house cleaning services'},
+    {'name': 'Plumbing', 'price': '8 JD', 'description': 'Fix leaks and other plumbing issues'},
+    {'name': 'Electrical', 'price': '15 JD', 'description': 'Electrical repair and maintenance services'},
+    {'name': 'Home devices maintenance', 'price': '10 JD', 'description': 'Maintenance of home devices and appliances'},
   ];
 
   void _addOrEditService({Map<String, dynamic>? service, required bool isEditing}) {
     final TextEditingController nameController = TextEditingController(text: service?['name']);
     final TextEditingController priceController = TextEditingController(text: service?['price']);
+    final TextEditingController descriptionController = TextEditingController(text: service?['description']);
 
     showDialog(
       context: context,
@@ -38,6 +38,11 @@ class _AdminDashboardState extends State<AdminDashboard> {
               decoration: const InputDecoration(labelText: 'Price'),
               keyboardType: TextInputType.number,
             ),
+            TextField(
+              controller: descriptionController,
+              decoration: const InputDecoration(labelText: 'Description'),
+              maxLines: 2,
+            ),
           ],
         ),
         actions: [
@@ -51,12 +56,14 @@ class _AdminDashboardState extends State<AdminDashboard> {
                 setState(() {
                   service!['name'] = nameController.text;
                   service['price'] = priceController.text;
+                  service['description'] = descriptionController.text;
                 });
               } else {
                 setState(() {
                   _services.add({
                     'name': nameController.text,
                     'price': priceController.text,
+                    'description': descriptionController.text,
                   });
                 });
               }
@@ -101,32 +108,31 @@ class _AdminDashboardState extends State<AdminDashboard> {
   }
 
   void _signOut(BuildContext context) {
-  showDialog(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: const Text('Sign Out'),
-      content: const Text('Are you sure you want to sign out?'),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
-        ),
-        ElevatedButton(
-          onPressed: () {
-            Navigator.pop(context); // Close the dialog
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute(
-                builder: (context) => const LoginScreen(), // Navigate to LoginScreen
-              ),
-            );
-          },
-          child: const Text('Sign Out'),
-        ),
-      ],
-    ),
-  );
-}
-
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Sign Out'),
+        content: const Text('Are you sure you want to sign out?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context); // Close the dialog
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(
+                  builder: (context) => const LoginScreen(), // Navigate to LoginScreen
+                ),
+              );
+            },
+            child: const Text('Sign Out'),
+          ),
+        ],
+      ),
+    );
+  }
 
   int _currentIndex = 0;
 
@@ -147,6 +153,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                   columns: const [
                     DataColumn(label: Text('Name')),
                     DataColumn(label: Text('Price')),
+                    DataColumn(label: Text('Description')),
                     DataColumn(label: Text('Actions')),
                   ],
                   rows: _services
@@ -156,6 +163,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                         (entry) => DataRow(cells: [
                           DataCell(Text(entry.value['name'])),
                           DataCell(Text('${entry.value['price']}')),
+                          DataCell(Text(entry.value['description'])),
                           DataCell(Row(
                             children: [
                               IconButton(

@@ -6,7 +6,6 @@ import 'forgot_password_screen.dart';
 import 'account_type.dart'; // Import the new AccountTypeScreen file
 import 'admin_dashboard.dart';
 
-
 void main() {
   runApp(const MyApp());
 }
@@ -37,6 +36,7 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isPasswordVisible = false;
   String? _phoneError;
   String? _passwordError;
+  String _selectedTab = 'User'; // Default tab
 
   @override
   void dispose() {
@@ -63,33 +63,59 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _login() {
-  _validateFields();
+    _validateFields();
 
-  if (_phoneError == null && _passwordError == null) {
-    if (_phoneController.text == '1111111111' &&
-        _passwordController.text == '123') {
-      // Navigate to Service Provider Dashboard
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const ServiceProviderDashboard()),
-      );
-    } else if (_phoneController.text == '2222222222' &&
-        _passwordController.text == '123') {
-      // Navigate to Admin Dashboard
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const AdminDashboard()),
-      );
-    } else {
-      // Navigate to Home Screen
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const HomeScreen()),
-      );
+    if (_phoneError == null && _passwordError == null) {
+      if (_selectedTab == 'Service Provider') {
+        if (_phoneController.text == '3333333333' &&
+            _passwordController.text == '123') {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => const ServiceProviderDashboard()),
+          );
+        } else {
+          _showLoginFailedMessage();
+        }
+      } else if (_selectedTab == 'User') {
+        if (_phoneController.text == '2222222222' &&
+            _passwordController.text == '123') {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const AdminDashboard()),
+          );
+        } else if (_phoneController.text == '1111111111' &&
+            _passwordController.text == '123') {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const HomeScreen()),
+          );
+        } else {
+          _showLoginFailedMessage();
+        }
+      } else {
+        _showLoginFailedMessage();
+      }
     }
   }
-}
 
+  void _showLoginFailedMessage() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Login Failed'),
+        content: const Text('Invalid phone number or password.'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -120,6 +146,63 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
             ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _selectedTab = 'User';
+                    });
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 8, horizontal: 16),
+                    decoration: BoxDecoration(
+                      color: _selectedTab == 'User'
+                          ? const Color(0xFF2094F3)
+                          : Colors.grey[200],
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      'User',
+                      style: TextStyle(
+                        color: _selectedTab == 'User'
+                            ? Colors.white
+                            : const Color(0xFF111518),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _selectedTab = 'Service Provider';
+                    });
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 8, horizontal: 16),
+                    decoration: BoxDecoration(
+                      color: _selectedTab == 'Service Provider'
+                          ? const Color(0xFF2094F3)
+                          : Colors.grey[200],
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      'Service Provider',
+                      style: TextStyle(
+                        color: _selectedTab == 'Service Provider'
+                            ? Colors.white
+                            : const Color(0xFF111518),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
             const Padding(
               padding: EdgeInsets.all(8.0),
               child: Text(

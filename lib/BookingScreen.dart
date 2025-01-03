@@ -39,10 +39,21 @@ class _BookingScreenState extends State<BookingScreen> {
       context: context,
       initialTime: const TimeOfDay(hour: 9, minute: 0),
     );
+
     if (pickedTime != null) {
-      setState(() {
-        _timeController.text = pickedTime.format(context);
-      });
+      // Restrict time selection between 9 AM and 5 PM
+      if (pickedTime.hour < 9 || pickedTime.hour >= 17) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please select a time between 9 AM and 5 PM.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      } else {
+        setState(() {
+          _timeController.text = pickedTime.format(context);
+        });
+      }
     }
   }
 
@@ -85,14 +96,11 @@ class _BookingScreenState extends State<BookingScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Section Title
             const Text(
               'Appointment Details',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
-
-            // Issue Description Field
             TextField(
               controller: _issueController,
               maxLines: 3,
@@ -104,8 +112,6 @@ class _BookingScreenState extends State<BookingScreen> {
               ),
             ),
             const SizedBox(height: 20),
-
-            // Date Picker
             TextField(
               controller: _dateController,
               readOnly: true,
@@ -118,8 +124,6 @@ class _BookingScreenState extends State<BookingScreen> {
               ),
             ),
             const SizedBox(height: 20),
-
-            // Time Picker
             TextField(
               controller: _timeController,
               readOnly: true,
@@ -132,8 +136,6 @@ class _BookingScreenState extends State<BookingScreen> {
               ),
             ),
             const SizedBox(height: 30),
-
-            // Confirm Booking Button
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(

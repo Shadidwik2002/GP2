@@ -18,9 +18,8 @@ class ProviderSchedulePage extends StatelessWidget {
             itemCount: acceptedRequests.length,
             itemBuilder: (context, index) {
               final request = acceptedRequests[index];
-              final statusColor = request['status'] == 'Accepted'
-                  ? Colors.green
-                  : Colors.red;
+              final statusColor =
+                  request['status'] == 'Accepted' ? Colors.green : Colors.red;
 
               return Card(
                 margin: const EdgeInsets.all(10),
@@ -38,6 +37,8 @@ class ProviderSchedulePage extends StatelessWidget {
                       Text('Customer: ${request['customerName']}'),
                       const SizedBox(height: 5),
                       Text('Time: ${request['time']}'),
+                      const SizedBox(height: 5),
+                      Text('Location: ${request['location']}'),
                       const SizedBox(height: 5),
                       Text(
                         'Status: ${request['status']}',

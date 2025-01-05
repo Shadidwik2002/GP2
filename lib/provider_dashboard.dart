@@ -6,7 +6,8 @@ class ServiceProviderDashboard extends StatefulWidget {
   const ServiceProviderDashboard({super.key});
 
   @override
-  _ServiceProviderDashboardState createState() => _ServiceProviderDashboardState();
+  _ServiceProviderDashboardState createState() =>
+      _ServiceProviderDashboardState();
 }
 
 class _ServiceProviderDashboardState extends State<ServiceProviderDashboard> {
@@ -19,6 +20,7 @@ class _ServiceProviderDashboardState extends State<ServiceProviderDashboard> {
       'customerName': 'John Doe',
       'details': 'Fix a leaking pipe in the kitchen.',
       'time': '2024-12-27 11:00 AM',
+      'location': 'Abdoon',
     },
     {
       'id': '2',
@@ -26,6 +28,7 @@ class _ServiceProviderDashboardState extends State<ServiceProviderDashboard> {
       'customerName': 'Jane Smith',
       'details': 'Repair the ceiling fan.',
       'time': '2024-12-27 2:00 PM',
+      'location': 'Sweileh',
     },
   ];
 
@@ -39,7 +42,8 @@ class _ServiceProviderDashboardState extends State<ServiceProviderDashboard> {
     DateTime newRequestTime = _parseTime(requestTime);
     DateTime lastAcceptedTime = _parseTime(acceptedRequests.last['time']!);
 
-    return newRequestTime.isAfter(lastAcceptedTime.add(const Duration(hours: 2)));
+    return newRequestTime
+        .isAfter(lastAcceptedTime.add(const Duration(hours: 2)));
   }
 
   DateTime _parseTime(String timeString) {
@@ -66,12 +70,44 @@ class _ServiceProviderDashboardState extends State<ServiceProviderDashboard> {
 
         if (accepted) {
           acceptedRequests.add(request);
-          providerStatus = 'Busy'; // Set status to Busy when an order is accepted
+          providerStatus =
+              'Busy'; // Set status to Busy when an order is accepted
         }
 
         requests.removeWhere((request) => request['id'] == id);
       });
     }
+  }
+
+  void handleRequestConfirmation(String id, bool accepted) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(accepted ? 'Accept Request' : 'Decline Request'),
+          content: Text(
+            accepted
+                ? 'Are you sure you want to accept this request?'
+                : 'Are you sure you want to decline this request?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+              },
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+                handleRequest(id, accepted); // Proceed with the action
+              },
+              child: const Text('Confirm'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   void toggleStatus() {
@@ -112,19 +148,23 @@ class _ServiceProviderDashboardState extends State<ServiceProviderDashboard> {
                         Text('Details: ${request['details']}'),
                         const SizedBox(height: 5),
                         Text('Time: ${request['time']}'),
+                        const SizedBox(height: 5),
+                        Text('Location: ${request['location']}'),
                         const SizedBox(height: 15),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             ElevatedButton(
-                              onPressed: () => handleRequest(request['id']!, true),
+                              onPressed: () => handleRequestConfirmation(
+                                  request['id']!, true),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.green,
                               ),
                               child: const Text('Accept'),
                             ),
                             ElevatedButton(
-                              onPressed: () => handleRequest(request['id']!, false),
+                              onPressed: () => handleRequestConfirmation(
+                                  request['id']!, false),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.red,
                               ),
@@ -154,8 +194,10 @@ class _ServiceProviderDashboardState extends State<ServiceProviderDashboard> {
                 GestureDetector(
                   onTap: toggleStatus,
                   child: Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    margin: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 10),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
                       color: providerStatus == 'Available'
                           ? Colors.green

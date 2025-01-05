@@ -43,6 +43,8 @@ class ProviderHistoryPage extends StatelessWidget {
                         Text('Details: ${service['details']}'),
                         const SizedBox(height: 5),
                         Text('Time: ${service['time']}'),
+                        const SizedBox(height: 5),
+                        Text('Location: ${service['location']}'),
                         const SizedBox(height: 15),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,

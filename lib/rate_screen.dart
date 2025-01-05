@@ -21,7 +21,7 @@ class _RateScreenState extends State<RateScreen> {
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
           content: const Text(
-            'We appreciate your feedback. Thank you for helping us improve!',
+            'We appreciate your feedback!!!!!',
             style: TextStyle(fontSize: 16, color: Colors.grey),
           ),
           actions: <Widget>[

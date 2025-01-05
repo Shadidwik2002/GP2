@@ -51,7 +51,7 @@ class HistoryScreen extends StatelessWidget {
                           );
                         }
                       },
-                      child: const Text('Reschedule'),
+                      child: const Text('Book Again'),
                     ),
                   ),
                 );

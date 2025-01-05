@@ -69,17 +69,17 @@ class _PaymentScreenState extends State<PaymentScreen> {
                 hint: const Text('Select Payment Method'),
                 isExpanded: true,
                 items: [
-                  DropdownMenuItem(
+                  const DropdownMenuItem(
                     value: 'Cash',
-                    child: const Text('Cash'),
+                    child: Text('Cash'),
                   ),
                   DropdownMenuItem(
                     value: 'Credit Card',
+                    enabled: false,
                     child: Text(
                       'Credit Card (Unavailable)',
                       style: TextStyle(color: Colors.grey[500]),
-                    ),
-                    enabled: false, // Disabled for future implementation
+                    ), // Disabled for future implementation
                   ),
                 ],
                 onChanged: (value) {

@@ -194,14 +194,14 @@ class _ServiceProviderRegistrationState extends State<ServiceProviderRegistratio
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
+                const Row(
                   children: [
-                    const Text(
+                    Text(
                       'Service Type',
                       style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
-                    const SizedBox(width: 5),
-                    const Text(
+                    SizedBox(width: 5),
+                    Text(
                       '*',
                       style: TextStyle(color: Colors.red, fontSize: 16),
                     ),
@@ -418,7 +418,7 @@ class _ServiceProviderRegistrationState extends State<ServiceProviderRegistratio
                 ],
               ),
             );
-          }).toList(),
+          }),
         if (isConfirmPassword && _confirmPasswordError.isNotEmpty)
           Padding(
             padding: const EdgeInsets.only(top: 5),

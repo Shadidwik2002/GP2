@@ -5,11 +5,14 @@ class VerificationForgotPassword extends StatefulWidget {
   const VerificationForgotPassword({super.key});
 
   @override
-  _VerificationForgotPasswordState createState() => _VerificationForgotPasswordState();
+  _VerificationForgotPasswordState createState() =>
+      _VerificationForgotPasswordState();
 }
 
-class _VerificationForgotPasswordState extends State<VerificationForgotPassword> {
-  final List<TextEditingController> _controllers = List.generate(4, (index) => TextEditingController());
+class _VerificationForgotPasswordState
+    extends State<VerificationForgotPassword> {
+  final List<TextEditingController> _controllers =
+      List.generate(6, (index) => TextEditingController()); // Updated to 6 digits
   String? warningMessage;
 
   void _verifyCode() {
@@ -17,7 +20,7 @@ class _VerificationForgotPasswordState extends State<VerificationForgotPassword>
     String enteredCode = _controllers.map((controller) => controller.text).join();
 
     setState(() {
-      if (enteredCode == '1234') {
+      if (enteredCode == '123456') { // Updated to match 6-digit code
         warningMessage = null; // Clear warning
         // Navigate to the New Password Screen
         Navigator.push(
@@ -68,7 +71,7 @@ class _VerificationForgotPasswordState extends State<VerificationForgotPassword>
               ),
               const SizedBox(height: 10),
               const Text(
-                'Please enter the 4-digit code sent to your registered phone number.',
+                'Please enter the 6-digit code sent to your registered phone number.',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 16, color: Colors.grey),
               ),
@@ -77,9 +80,9 @@ class _VerificationForgotPasswordState extends State<VerificationForgotPassword>
               // Code Input Row
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: List.generate(4, (index) {
+                children: List.generate(6, (index) { // Updated to 6
                   return SizedBox(
-                    width: 60,
+                    width: 50, // Adjusted width for better spacing with 6 digits
                     child: TextFormField(
                       controller: _controllers[index],
                       decoration: InputDecoration(
@@ -111,25 +114,6 @@ class _VerificationForgotPasswordState extends State<VerificationForgotPassword>
                   style: const TextStyle(color: Colors.red, fontSize: 14),
                 ),
 
-              // Resend Code
-              const SizedBox(height: 20),
-              TextButton(
-                onPressed: () {
-                  // Handle resend code action here
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Verification code resent!')),
-                  );
-                },
-                child: const Text(
-                  'Resend Code',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Color(0xFF2094F3),
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-
               const SizedBox(height: 20),
 
               // Verify Button
@@ -146,7 +130,10 @@ class _VerificationForgotPasswordState extends State<VerificationForgotPassword>
                   ),
                   child: const Text(
                     'Verify',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                    style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white),
                   ),
                 ),
               ),

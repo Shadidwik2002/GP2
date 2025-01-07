@@ -13,7 +13,7 @@ class VerificationScreen extends StatelessWidget {
         : phoneNumber;
 
     final List<TextEditingController> controllers =
-        List.generate(4, (index) => TextEditingController());
+        List.generate(6, (index) => TextEditingController()); // Updated to 6 digits
 
     return Scaffold(
       backgroundColor: const Color(0xFFF9FAFB), // Light background for professional look
@@ -62,7 +62,7 @@ class VerificationScreen extends StatelessWidget {
 
             // Description
             Text(
-              'We have sent a 4-digit verification code to \n$maskedPhoneNumber',
+              'We have sent a 6-digit verification code to \n$maskedPhoneNumber',
               style: const TextStyle(fontSize: 16, color: Colors.grey),
               textAlign: TextAlign.center,
             ),
@@ -71,9 +71,9 @@ class VerificationScreen extends StatelessWidget {
             // Input fields for verification code
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: List.generate(4, (index) {
+              children: List.generate(6, (index) {
                 return SizedBox(
-                  width: 60,
+                  width: 50, // Adjusted width for 6 digits
                   height: 60,
                   child: TextFormField(
                     controller: controllers[index],
@@ -101,28 +101,6 @@ class VerificationScreen extends StatelessWidget {
                   ),
                 );
               }),
-            ),
-            const SizedBox(height: 30),
-
-            // Resend Code Section
-            GestureDetector(
-              onTap: () {
-                // Logic for resending the code
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Verification code resent successfully!'),
-                    backgroundColor: Colors.blue,
-                  ),
-                );
-              },
-              child: const Text(
-                "Didn't receive the code? Resend",
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Color(0xFF2094F3),
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
             ),
             const SizedBox(height: 30),
 
@@ -159,7 +137,7 @@ class VerificationScreen extends StatelessWidget {
                       String enteredCode = controllers
                           .map((controller) => controller.text)
                           .join();
-                      if (enteredCode == '1234') {
+                      if (enteredCode == '123456') { // Updated to 6 digits
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
                             content: Text('Verification Successful!'),

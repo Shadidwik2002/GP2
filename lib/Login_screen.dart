@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'provider_dashboard.dart';
 import 'home_screen.dart';
 import 'forgot_password_screen.dart';
-import 'account_type.dart'; // Import the new AccountTypeScreen file
+import 'account_type.dart'; 
 import 'admin_dashboard.dart';
 
 void main() {

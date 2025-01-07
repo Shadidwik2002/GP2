@@ -17,68 +17,6 @@ class _AdminDashboardState extends State<AdminDashboard> {
     {'name': 'Home devices maintenance', 'price': '10 JD', 'description': 'Maintenance of home devices and appliances'},
   ];
 
-  void _addOrEditService({Map<String, dynamic>? service, required bool isEditing}) {
-    final TextEditingController nameController = TextEditingController(text: service?['name']);
-    final TextEditingController priceController = TextEditingController(text: service?['price']);
-    final TextEditingController descriptionController = TextEditingController(text: service?['description']);
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(isEditing ? 'Edit Service' : 'Add Service'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: nameController,
-              decoration: const InputDecoration(labelText: 'Service Name'),
-            ),
-            TextField(
-              controller: priceController,
-              decoration: const InputDecoration(labelText: 'Price'),
-              keyboardType: TextInputType.number,
-            ),
-            TextField(
-              controller: descriptionController,
-              decoration: const InputDecoration(labelText: 'Description'),
-              maxLines: 2,
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              if (isEditing) {
-                setState(() {
-                  service!['name'] = nameController.text;
-                  service['price'] = priceController.text;
-                  service['description'] = descriptionController.text;
-                });
-              } else {
-                setState(() {
-                  _services.add({
-                    'name': nameController.text,
-                    'price': priceController.text,
-                    'description': descriptionController.text,
-                  });
-                });
-              }
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(isEditing ? 'Service updated!' : 'Service added!')),
-              );
-            },
-            child: const Text('Save'),
-          ),
-        ],
-      ),
-    );
-  }
-
   void _deleteService(int index) {
     showDialog(
       context: context,
@@ -167,13 +105,6 @@ class _AdminDashboardState extends State<AdminDashboard> {
                           DataCell(Row(
                             children: [
                               IconButton(
-                                icon: const Icon(Icons.edit, color: Colors.blue),
-                                onPressed: () => _addOrEditService(
-                                  service: entry.value,
-                                  isEditing: true,
-                                ),
-                              ),
-                              IconButton(
                                 icon: const Icon(Icons.delete, color: Colors.red),
                                 onPressed: () => _deleteService(entry.key),
                               ),
@@ -185,9 +116,16 @@ class _AdminDashboardState extends State<AdminDashboard> {
                 ),
               ),
               const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: () => _addOrEditService(isEditing: false),
-                child: const Text('Add Service'),
+              // Display "(Unavailable)" text in dark grey
+              const Center(
+                child: Text(
+                  'Add Service (Unavailable)',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.grey, // Dark grey font
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
               ),
             ],
           ),

@@ -21,16 +21,11 @@ class _ServiceProviderRegistrationState
   final TextEditingController _confirmPasswordController =
       TextEditingController();
 
-  final List<String> _serviceTypes = [
-    'Electrician',
-    'Plumber',
-    'House Cleaning',
-    'Home Device Maintenance'
-  ];
-  final List<String> _selectedServiceTypes = [];
-
   final ApiService apiService =
       ApiService(baseUrl: 'http://localhost:5196'); // Replace with your backend URL
+
+  List<String> _serviceTypes = [];
+  final List<String> _selectedServiceTypes = [];
 
   String _firstNameError = '';
   String _lastNameError = '';
@@ -43,16 +38,29 @@ class _ServiceProviderRegistrationState
   bool _isConfirmPasswordVisible = false;
   bool _isDropdownOpen = false;
   bool _isLoading = false;
+  bool _isFetchingServices = true;
 
   @override
-  void dispose() {
-    _firstNameController.dispose();
-    _lastNameController.dispose();
-    _phoneController.dispose();
-    _licenseNumberController.dispose();
-    _passwordController.dispose();
-    _confirmPasswordController.dispose();
-    super.dispose();
+  void initState() {
+    super.initState();
+    _fetchServiceTypes();
+  }
+
+  Future<void> _fetchServiceTypes() async {
+    try {
+      final response = await apiService.get('/api/service');
+      final services = response['Services'] as List<dynamic>;
+
+      setState(() {
+        _serviceTypes = services.map((service) => service['name'] as String).toList();
+        _isFetchingServices = false;
+      });
+    } catch (e) {
+      print('Failed to fetch service types: $e');
+      setState(() {
+        _isFetchingServices = false;
+      });
+    }
   }
 
   void _validateInputs() {
@@ -109,8 +117,7 @@ class _ServiceProviderRegistrationState
 
       if (_confirmPasswordController.text.isEmpty) {
         _confirmPasswordError = 'Please confirm your password';
-      } else if (_passwordController.text !=
-          _confirmPasswordController.text) {
+      } else if (_passwordController.text != _confirmPasswordController.text) {
         _confirmPasswordError = 'Passwords do not match!';
       }
     });
@@ -185,6 +192,192 @@ class _ServiceProviderRegistrationState
     }
   }
 
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Service Provider Registration'),
+        backgroundColor: const Color(0xFF2094F3),
+      ),
+      body: _isFetchingServices
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Register Account',
+                    style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 20),
+                  _buildTextField(
+                    'First Name',
+                    _firstNameController,
+                    errorMessage: _firstNameError,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z]'))
+                    ],
+                  ),
+                  const SizedBox(height: 15),
+                  _buildTextField(
+                    'Last Name',
+                    _lastNameController,
+                    errorMessage: _lastNameError,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z]'))
+                    ],
+                  ),
+                  const SizedBox(height: 15),
+                  _buildTextField(
+                     'Phone Number',
+                      _phoneController,
+                    errorMessage: _phoneError,
+                    keyboardType: TextInputType.phone,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
+                      LengthLimitingTextInputFormatter(10), // Restricts input to 10 digits
+                         ],
+                       ),
+                  const SizedBox(height: 15),
+                  _buildTextField(
+                    'Business License Number',
+                    _licenseNumberController,
+                    errorMessage: _licenseError,
+                  ),
+                  const SizedBox(height: 15),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Service Type',
+                        style: TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 5),
+                      GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            _isDropdownOpen = !_isDropdownOpen;
+                          });
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF0F2F5),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: _serviceTypeError.isNotEmpty
+                                  ? Colors.red
+                                  : Colors.grey,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  _selectedServiceTypes.isEmpty
+                                      ? 'Select Service Types (Required)'
+                                      : _selectedServiceTypes.join(', '),
+                                  style: TextStyle(
+                                    color: _selectedServiceTypes.isEmpty
+                                        ? Colors.grey
+                                        : Colors.black,
+                                  ),
+                                ),
+                              ),
+                              Icon(_isDropdownOpen
+                                  ? Icons.arrow_drop_up
+                                  : Icons.arrow_drop_down),
+                            ],
+                          ),
+                        ),
+                      ),
+                      if (_isDropdownOpen)
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF0F2F5),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: _serviceTypeError.isNotEmpty
+                                  ? Colors.red
+                                  : Colors.grey,
+                            ),
+                          ),
+                          child: Column(
+                            children: _serviceTypes.map((type) {
+                              return CheckboxListTile(
+                                title: Text(type),
+                                value: _selectedServiceTypes.contains(type),
+                                onChanged: (isSelected) {
+                                  setState(() {
+                                    if (isSelected == true) {
+                                      _selectedServiceTypes.add(type);
+                                      _serviceTypeError = '';
+                                    } else {
+                                      _selectedServiceTypes.remove(type);
+                                      if (_selectedServiceTypes.isEmpty) {
+                                        _serviceTypeError =
+                                            'Please select at least one service type';
+                                      }
+                                    }
+                                  });
+                                },
+                              );
+                            }).toList(),
+                          ),
+                        ),
+                      if (_serviceTypeError.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 5),
+                          child: Text(
+                            _serviceTypeError,
+                            style: const TextStyle(
+                                color: Colors.red, fontSize: 14),
+                          ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 15),
+                  _buildPasswordField(
+                      'Password', _passwordController, _passwordErrors),
+                  const SizedBox(height: 15),
+                  _buildPasswordField(
+                    'Confirm Password',
+                    _confirmPasswordController,
+                    [_confirmPasswordError],
+                    isConfirmPassword: true,
+                  ),
+                  const SizedBox(height: 20),
+                  _isLoading
+                      ? const Center(child: CircularProgressIndicator())
+                      : ElevatedButton(
+                          onPressed: _submitRegistration,
+                          style: ElevatedButton.styleFrom(
+                            minimumSize: const Size(double.infinity, 50),
+                            backgroundColor: const Color(0xFF2094F3),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            elevation: 5,
+                          ),
+                          child: const Text(
+                            'Submit Registration',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                ],
+              ),
+            ),
+    );
+  }
+
   Widget _buildTextField(
     String hintText,
     TextEditingController controller, {
@@ -232,7 +425,9 @@ class _ServiceProviderRegistrationState
       children: [
         TextFormField(
           controller: controller,
-          obscureText: isConfirmPassword ? !_isConfirmPasswordVisible : !_isPasswordVisible,
+          obscureText: isConfirmPassword
+              ? !_isConfirmPasswordVisible
+              : !_isPasswordVisible,
           decoration: InputDecoration(
             labelText: hintText,
             filled: true,
@@ -277,183 +472,6 @@ class _ServiceProviderRegistrationState
             }).toList(),
           ),
       ],
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Service Provider Registration'),
-        backgroundColor: const Color(0xFF2094F3),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Register Account',
-              style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 20),
-            _buildTextField(
-              'First Name',
-              _firstNameController,
-              errorMessage: _firstNameError,
-              inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z]'))],
-            ),
-            const SizedBox(height: 15),
-            _buildTextField(
-              'Last Name',
-              _lastNameController,
-              errorMessage: _lastNameError,
-              inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z]'))],
-            ),
-            const SizedBox(height: 15),
-            _buildTextField(
-              'Phone Number',
-              _phoneController,
-              errorMessage: _phoneError,
-              keyboardType: TextInputType.phone,
-              inputFormatters: [
-                FilteringTextInputFormatter.digitsOnly,
-                LengthLimitingTextInputFormatter(10)
-              ],
-            ),
-            const SizedBox(height: 15),
-            _buildTextField(
-              'Business License Number',
-              _licenseNumberController,
-              errorMessage: _licenseError,
-            ),
-            const SizedBox(height: 15),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Service Type',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 5),
-                GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      _isDropdownOpen = !_isDropdownOpen;
-                    });
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF0F2F5),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: _serviceTypeError.isNotEmpty
-                            ? Colors.red
-                            : Colors.grey,
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Expanded(
-                          child: Text(
-                            _selectedServiceTypes.isEmpty
-                                ? 'Select Service Types (Required)'
-                                : _selectedServiceTypes.join(', '),
-                            style: TextStyle(
-                              color: _selectedServiceTypes.isEmpty
-                                  ? Colors.grey
-                                  : Colors.black,
-                            ),
-                          ),
-                        ),
-                        Icon(_isDropdownOpen
-                            ? Icons.arrow_drop_up
-                            : Icons.arrow_drop_down),
-                      ],
-                    ),
-                  ),
-                ),
-                if (_isDropdownOpen)
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF0F2F5),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: _serviceTypeError.isNotEmpty
-                            ? Colors.red
-                            : Colors.grey,
-                      ),
-                    ),
-                    child: Column(
-                      children: _serviceTypes.map((type) {
-                        return CheckboxListTile(
-                          title: Text(type),
-                          value: _selectedServiceTypes.contains(type),
-                          onChanged: (isSelected) {
-                            setState(() {
-                              if (isSelected == true) {
-                                _selectedServiceTypes.add(type);
-                                _serviceTypeError = '';
-                              } else {
-                                _selectedServiceTypes.remove(type);
-                                if (_selectedServiceTypes.isEmpty) {
-                                  _serviceTypeError =
-                                      'Please select at least one service type';
-                                }
-                              }
-                            });
-                          },
-                        );
-                      }).toList(),
-                    ),
-                  ),
-                if (_serviceTypeError.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 5),
-                    child: Text(
-                      _serviceTypeError,
-                      style: const TextStyle(color: Colors.red, fontSize: 14),
-                    ),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 15),
-            _buildPasswordField('Password', _passwordController, _passwordErrors),
-            const SizedBox(height: 15),
-            _buildPasswordField(
-              'Confirm Password',
-              _confirmPasswordController,
-              [_confirmPasswordError],
-              isConfirmPassword: true,
-            ),
-            const SizedBox(height: 20),
-            _isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : ElevatedButton(
-                    onPressed: _submitRegistration,
-                    style: ElevatedButton.styleFrom(
-                      minimumSize: const Size(double.infinity, 50),
-                      backgroundColor: const Color(0xFF2094F3),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      elevation: 5,
-                    ),
-                    child: const Text(
-                      'Submit Registration',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-          ],
-        ),
-      ),
     );
   }
 }

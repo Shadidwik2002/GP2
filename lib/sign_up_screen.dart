@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:gp2/api_service.dart';
 import 'package:gp2/verification_screen.dart';
 
@@ -12,14 +13,14 @@ class SignUpScreen extends StatefulWidget {
 class _SignUpScreenState extends State<SignUpScreen> {
   final ApiService apiService = ApiService(baseUrl: 'http://localhost:5196');
 
-void testApiConnection() async {
-  try {
-    final response = await apiService.get('/api/Admin/register/user'); // Replace with a health-check endpoint
-    print('API connection successful: $response');
-  } catch (e) {
-    print('API connection failed3: $e');
+  void testApiConnection() async {
+    try {
+      final response = await apiService.get('/api/Admin/register/user');
+      print('API connection successful: $response');
+    } catch (e) {
+      print('API connection failed3: $e');
+    }
   }
-}
 
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _firstNameController = TextEditingController();
@@ -34,10 +35,20 @@ void testApiConnection() async {
   String _confirmPasswordError = '';
   bool _isPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
+  final String verificationCode =''; 
 
+  // Add validation helper functions
+  bool _containsNumbers(String str) {
+    return RegExp(r'[0-9]').hasMatch(str);
+  }
 
+  bool _isValidPhoneNumber(String str) {
+    return RegExp(r'^[0-9]{10}$').hasMatch(str);
+  }
+
+  // Updated input validation
   void _validateInputs() {
-     testApiConnection();
+    testApiConnection();
 
     setState(() {
       _phoneError = '';
@@ -46,16 +57,25 @@ void testApiConnection() async {
       _passwordErrors.clear();
       _confirmPasswordError = '';
 
+      // First Name validation
       if (_firstNameController.text.isEmpty) {
         _firstNameError = 'Please enter your first name';
       }
+
+      // Last Name validation
       if (_lastNameController.text.isEmpty) {
         _lastNameError = 'Please enter your last name';
       }
+
+      // Phone number validation
       String phoneText = _phoneController.text;
-      if (phoneText.isEmpty || !_isNumeric(phoneText) || phoneText.length != 10) {
-        _phoneError = 'Please enter a valid 10-digit phone number';
+      if (phoneText.isEmpty) {
+        _phoneError = 'Please enter your phone number';
+      } else if (!_isValidPhoneNumber(phoneText)) {
+        _phoneError = 'Please enter exactly 10 digits for phone number';
       }
+
+      // Password validation
       if (_passwordController.text.isEmpty) {
         _passwordErrors.add('Please enter a password');
       } else {
@@ -76,24 +96,21 @@ void testApiConnection() async {
           _passwordErrors.add('Password must contain at least one special character');
         }
       }
-/*
+
+      // Confirm Password validation
       if (_confirmPasswordController.text.isEmpty) {
         _confirmPasswordError = 'Please confirm your password';
+      } else if (_passwordController.text != _confirmPasswordController.text) {
+        _confirmPasswordError = 'Passwords do not match';
       }
 
-      if (_passwordController.text.isNotEmpty &&
-          _confirmPasswordController.text.isNotEmpty) {
-        if (_passwordController.text != _confirmPasswordController.text) {
-          _passwordErrors.add('Passwords do not match!');
-          _confirmPasswordError = 'Passwords do not match!';
-        }
-
-      }
-*/
-      if (_phoneError.isEmpty && _firstNameError.isEmpty && _lastNameError.isEmpty && _passwordErrors.isEmpty && _confirmPasswordError.isEmpty) {
+      if (_phoneError.isEmpty && 
+          _firstNameError.isEmpty && 
+          _lastNameError.isEmpty && 
+          _passwordErrors.isEmpty && 
+          _confirmPasswordError.isEmpty) {
         _registerUser();
       }
-
     });
   }
 
@@ -106,15 +123,10 @@ void testApiConnection() async {
 
     try {
       final response = await apiService.post('/api/Admin/register/user', userRegistrationDto);
-      // Handle successful registration
       print('User registered successfully: $response');
     } catch (e) {
-      // Handle registration error
       print('Failed to register user: $e');
     }
-  }
-  bool _isNumeric(String str) {
-    return RegExp(r'^[0-9]+$').hasMatch(str);
   }
 
   void _validateAndContinue() {
@@ -130,6 +142,8 @@ void testApiConnection() async {
         MaterialPageRoute(
           builder: (context) => VerificationScreen(
             phoneNumber: _phoneController.text,
+            
+
           ),
         ),
       );
@@ -180,12 +194,12 @@ void testApiConnection() async {
               _phoneController,
               Icons.phone,
               _phoneError,
-              keyboardType: TextInputType.phone,
+              keyboardType: TextInputType.number,
             ),
             const SizedBox(height: 20),
             _buildPasswordField('Password', _passwordController, _passwordErrors),
             const SizedBox(height: 20),
-            _buildPasswordField('Confirm Password', _confirmPasswordController, [], isConfirmPassword: true),
+            _buildPasswordField('Confirm Password', _confirmPasswordController, [_confirmPasswordError], isConfirmPassword: true),
             const SizedBox(height: 30),
 
             // Submit Button
@@ -217,8 +231,29 @@ void testApiConnection() async {
     );
   }
 
-  Widget _buildTextField(String hintText, TextEditingController controller, IconData icon,
-      String errorMessage, {bool obscureText = false, TextInputType keyboardType = TextInputType.text}) {
+  Widget _buildTextField(
+    String hintText,
+    TextEditingController controller,
+    IconData icon,
+    String errorMessage, {
+    bool obscureText = false,
+    TextInputType keyboardType = TextInputType.text,
+  }) {
+    // Create input formatters based on field type
+    List<TextInputFormatter> getInputFormatters() {
+      if (hintText == 'First Name' || hintText == 'Last Name') {
+        return [
+          FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z\s]')), // Only letters and spaces
+        ];
+      } else if (hintText == 'Phone Number') {
+        return [
+          FilteringTextInputFormatter.digitsOnly, // Only numbers
+          LengthLimitingTextInputFormatter(10), // Max 10 digits
+        ];
+      }
+      return []; // No formatters for other fields
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -226,6 +261,7 @@ void testApiConnection() async {
           controller: controller,
           keyboardType: keyboardType,
           obscureText: obscureText,
+          inputFormatters: getInputFormatters(),
           decoration: InputDecoration(
             labelText: hintText,
             labelStyle: const TextStyle(color: Color(0xFF888888)),
@@ -251,8 +287,12 @@ void testApiConnection() async {
     );
   }
 
-  Widget _buildPasswordField(String hintText, TextEditingController controller, List<String> errorMessages,
-      {bool isConfirmPassword = false}) {
+  Widget _buildPasswordField(
+    String hintText,
+    TextEditingController controller,
+    List<String> errorMessages, {
+    bool isConfirmPassword = false,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

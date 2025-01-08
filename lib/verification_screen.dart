@@ -137,21 +137,19 @@ class VerificationScreen extends StatelessWidget {
                       String enteredCode = controllers
                           .map((controller) => controller.text)
                           .join();
-                      if (enteredCode == '123456') { // Updated to 6 digits
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Verification Successful!'),
-                            backgroundColor: Colors.green,
-                          ),
-                        );
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Invalid Code, Please Try Again.'),
-                            backgroundColor: Colors.red,
-                          ),
-                        );
-                      }
+
+                      // Placeholder for backend integration
+                      // Send `enteredCode` and `phoneNumber` to your backend for verification
+                      print("Entered Code: $enteredCode");
+                      print("Phone Number: $phoneNumber");
+
+                      // Show success or error message
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Verification process initiated.'),
+                          backgroundColor: Colors.blue,
+                        ),
+                      );
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF2094F3),

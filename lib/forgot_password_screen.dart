@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'verification_forgot_password.dart'; // Import the VerifyNumberScreen
+import 'package:gp2/api_service.dart'; // Import your ApiService class
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -10,7 +11,42 @@ class ForgotPasswordScreen extends StatefulWidget {
 
 class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final TextEditingController phoneController = TextEditingController();
+  final ApiService apiService =
+      ApiService(baseUrl: 'http://localhost:5196'); // Replace with your backend URL
   String? warningMessage;
+  bool isLoading = false;
+
+  Future<void> _sendForgotPasswordRequest() async {
+    setState(() {
+      isLoading = true;
+    });
+
+    final forgotPasswordDto = {'identifier': phoneController.text};
+
+    try {
+      await apiService.post('/api/Account/forgot-password', forgotPasswordDto);
+      setState(() {
+        warningMessage = null;
+      });
+
+      // Navigate to the verification screen if the request is successful
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const VerificationForgotPassword(),
+        ),
+      );
+    } catch (e) {
+      setState(() {
+        warningMessage = 'Failed to send verification code. Please try again.';
+      });
+      print('Forgot password request failed: $e');
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
 
   void _validatePhoneNumber() {
     setState(() {
@@ -18,11 +54,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         warningMessage = 'Please enter a valid 10-digit phone number.';
       } else {
         warningMessage = null;
-        // Navigate to VerifyNumberScreen when the phone number is valid
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const VerificationForgotPassword()),
-        );
+        _sendForgotPasswordRequest(); // Call the backend request if the number is valid
       }
     });
   }
@@ -101,27 +133,29 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               const SizedBox(height: 30),
 
               // Send Button
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _validatePhoneNumber,
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    backgroundColor: const Color(0xFF2094F3),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+              isLoading
+                  ? const CircularProgressIndicator()
+                  : SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: _validatePhoneNumber,
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          backgroundColor: const Color(0xFF2094F3),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: const Text(
+                          'Send Verification Code',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
-                  child: const Text(
-                    'Send Verification Code',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ),
             ],
           ),
         ),

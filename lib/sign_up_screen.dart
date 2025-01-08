@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'verification_screen.dart'; // Import the VerificationScreen
+import 'package:gp2/api_service.dart';
+import 'package:gp2/verification_screen.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -9,6 +10,17 @@ class SignUpScreen extends StatefulWidget {
 }
 
 class _SignUpScreenState extends State<SignUpScreen> {
+  final ApiService apiService = ApiService(baseUrl: 'http://localhost:5196');
+
+void testApiConnection() async {
+  try {
+    final response = await apiService.get('/api/Admin/register/user'); // Replace with a health-check endpoint
+    print('API connection successful: $response');
+  } catch (e) {
+    print('API connection failed3: $e');
+  }
+}
+
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _firstNameController = TextEditingController();
   final TextEditingController _lastNameController = TextEditingController();
@@ -23,7 +35,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
   bool _isPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
 
+
   void _validateInputs() {
+     testApiConnection();
+
     setState(() {
       _phoneError = '';
       _firstNameError = '';
@@ -37,12 +52,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
       if (_lastNameController.text.isEmpty) {
         _lastNameError = 'Please enter your last name';
       }
-
       String phoneText = _phoneController.text;
       if (phoneText.isEmpty || !_isNumeric(phoneText) || phoneText.length != 10) {
         _phoneError = 'Please enter a valid 10-digit phone number';
       }
-
       if (_passwordController.text.isEmpty) {
         _passwordErrors.add('Please enter a password');
       } else {
@@ -63,7 +76,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
           _passwordErrors.add('Password must contain at least one special character');
         }
       }
-
+/*
       if (_confirmPasswordController.text.isEmpty) {
         _confirmPasswordError = 'Please confirm your password';
       }
@@ -74,10 +87,32 @@ class _SignUpScreenState extends State<SignUpScreen> {
           _passwordErrors.add('Passwords do not match!');
           _confirmPasswordError = 'Passwords do not match!';
         }
+
       }
+*/
+      if (_phoneError.isEmpty && _firstNameError.isEmpty && _lastNameError.isEmpty && _passwordErrors.isEmpty && _confirmPasswordError.isEmpty) {
+        _registerUser();
+      }
+
     });
   }
 
+  void _registerUser() async {
+    final userRegistrationDto = {
+      'name': '${_firstNameController.text} ${_lastNameController.text}',
+      'phoneNumber': _phoneController.text,
+      'password': _passwordController.text,
+    };
+
+    try {
+      final response = await apiService.post('/api/Admin/register/user', userRegistrationDto);
+      // Handle successful registration
+      print('User registered successfully: $response');
+    } catch (e) {
+      // Handle registration error
+      print('Failed to register user: $e');
+    }
+  }
   bool _isNumeric(String str) {
     return RegExp(r'^[0-9]+$').hasMatch(str);
   }

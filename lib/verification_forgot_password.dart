@@ -20,15 +20,19 @@ class _VerificationForgotPasswordState
     String enteredCode = _controllers.map((controller) => controller.text).join();
 
     setState(() {
-      if (enteredCode == '123456') { // Updated to match 6-digit code
-        warningMessage = null; // Clear warning
-        // Navigate to the New Password Screen
+      // Placeholder for backend integration
+      print("Entered Code: $enteredCode");
+
+      // Replace with actual backend logic
+      // For now, just log a placeholder message
+      if (enteredCode.isEmpty) {
+        warningMessage = 'Code cannot be empty. Please try again.'; // Example warning
+      } else {
+        // Call backend API to verify the code and navigate accordingly
         Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => const NewPasswordScreen()),
         );
-      } else {
-        warningMessage = 'Invalid code. Please try again.'; // Display warning
       }
     });
   }
@@ -80,7 +84,7 @@ class _VerificationForgotPasswordState
               // Code Input Row
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: List.generate(6, (index) { // Updated to 6
+                children: List.generate(6, (index) {
                   return SizedBox(
                     width: 50, // Adjusted width for better spacing with 6 digits
                     child: TextFormField(

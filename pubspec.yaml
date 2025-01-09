@@ -4,7 +4,7 @@ description: "A new Flutter project."
 version: 1.0.0+1
 
 environment:
-  sdk: ^3.5.3
+  sdk: ">=3.5.3"
 
 dependencies:
   flutter:
@@ -13,7 +13,8 @@ dependencies:
   geolocator: ^13.0.2          # To fetch the user's location
   geocoding: ^3.0.0            # For reverse geocoding (LatLng to address)
   cupertino_icons: ^1.0.8
-
+  http: ^1.0.0
+  
 dev_dependencies:
   flutter_test:
     sdk: flutter

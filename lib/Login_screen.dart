@@ -3,8 +3,9 @@ import 'package:flutter/services.dart';
 import 'provider_dashboard.dart';
 import 'home_screen.dart';
 import 'forgot_password_screen.dart';
-import 'account_type.dart'; 
+import 'account_type.dart';
 import 'admin_dashboard.dart';
+import 'package:gp2/api_service.dart';
 
 void main() {
   runApp(const MyApp());
@@ -32,11 +33,15 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final ApiService apiService = ApiService(baseUrl: 'http://localhost:5196'); // Update with your backend URL
 
   bool _isPasswordVisible = false;
   String? _phoneError;
   String? _passwordError;
-  String _selectedTab = 'User'; // Default tab
+  bool _isLoading = false;
+
+  String _selectedTab = 'User'; // Default to 'User'
+
 
   @override
   void dispose() {
@@ -62,39 +67,53 @@ class _LoginScreenState extends State<LoginScreen> {
     });
   }
 
-  void _login() {
+  Future<void> _login() async {
     _validateFields();
 
     if (_phoneError == null && _passwordError == null) {
-      if (_selectedTab == 'Service Provider') {
-        if (_phoneController.text == '3333333333' &&
-            _passwordController.text == '123') {
+      setState(() {
+        _isLoading = true;
+      });
+
+      final loginUserDto = {
+        'identifier': _phoneController.text,
+        'password': _passwordController.text,
+      };
+
+      try {
+        final response = await apiService.post('/api/Account/login', loginUserDto);
+        final token = response['token'];
+        final user = response['user'];
+
+        // Check the user's role
+        if (user['role'] == 'ServiceProvider') {
           Navigator.push(
             context,
-            MaterialPageRoute(
-                builder: (context) => const ServiceProviderDashboard()),
+            MaterialPageRoute(builder: (context) => const ServiceProviderDashboard()),
           );
-        } else {
-          _showLoginFailedMessage();
-        }
-      } else if (_selectedTab == 'User') {
-        if (_phoneController.text == '2222222222' &&
-            _passwordController.text == '123') {
+        } else if (user['role'] == 'Admin') {
           Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => const AdminDashboard()),
           );
-        } else if (_phoneController.text == '1111111111' &&
-            _passwordController.text == '123') {
+        } else if (user['role'] == 'User') {
           Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => const HomeScreen()),
           );
         } else {
-          _showLoginFailedMessage();
+          throw Exception('Unknown role');
         }
-      } else {
+
+        // Optionally, save the token for future use (e.g., using SharedPreferences)
+        print('Login successful, token: $token');
+      } catch (e) {
         _showLoginFailedMessage();
+        print('Login failed: $e');
+      } finally {
+        setState(() {
+          _isLoading = false;
+        });
       }
     }
   }
@@ -310,24 +329,26 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
             Padding(
               padding: const EdgeInsets.all(20),
-              child: ElevatedButton(
-                onPressed: _login,
-                style: ElevatedButton.styleFrom(
-                  minimumSize: const Size(double.infinity, 50),
-                  backgroundColor: const Color(0xFF2094F3),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-                child: const Text(
-                  'Log in',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
+              child: _isLoading
+                  ? const CircularProgressIndicator()
+                  : ElevatedButton(
+                      onPressed: _login,
+                      style: ElevatedButton.styleFrom(
+                        minimumSize: const Size(double.infinity, 50),
+                        backgroundColor: const Color(0xFF2094F3),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      child: const Text(
+                        'Log in',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
             ),
             GestureDetector(
               onTap: () {

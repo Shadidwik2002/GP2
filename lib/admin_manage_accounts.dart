@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'api_service.dart'; // Replace with your actual ApiService import
 
 class ManageAccountsPage extends StatefulWidget {
   const ManageAccountsPage({super.key});
@@ -8,146 +9,85 @@ class ManageAccountsPage extends StatefulWidget {
 }
 
 class _ManageAccountsPageState extends State<ManageAccountsPage> {
-  final List<Map<String, String>> _users = [
-    {
-      'name': 'John Doe',
-      'status': 'Active',
-      'type': 'User',
-      'phone': '1234567890',
-      'id': 'U001',
-    },
-    {
-      'name': 'Jane Smith',
-      'status': 'Inactive',
-      'type': 'Service Provider',
-      'phone': '0987654321',
-      'id': 'SP002',
-      'service': 'Plumber',
-    },
-    {
-      'name': 'Michael Johnson',
-      'status': 'Active',
-      'type': 'User',
-      'phone': '1122334455',
-      'id': 'U003',
-    },
-    {
-      'name': 'Emily Davis',
-      'status': 'Active',
-      'type': 'Service Provider',
-      'phone': '2233445566',
-      'id': 'SP004',
-      'service': 'Electrician',
-    },
-  ];
-
+  final ApiService apiService = ApiService(baseUrl: 'http://localhost:5196'); // Update backend URL
+  List<Map<String, dynamic>> _users = [];
   String _searchQuery = '';
-//aSASD
-  void _changeUserStatus(BuildContext context, int index, String newStatus) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('${newStatus == 'Inactive' ? 'Deactivate' : 'Activate'} User'),
-        content: Text(
-          'Are you sure you want to ${newStatus.toLowerCase()} this user?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('Cancel', style: TextStyle(color: Colors.grey[700])),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              setState(() {
-                _users[index]['status'] = newStatus;
-              });
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    'User ${newStatus.toLowerCase()}d successfully!',
-                  ),
-                  behavior: SnackBarBehavior.floating,
-                ),
-              );
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: newStatus == 'Inactive' ? Colors.red : Colors.green,
-            ),
-            child: Text(
-              newStatus == 'Inactive' ? 'Deactivate' : 'Activate',
-              style: const TextStyle(color: Colors.white),
-            ),
-          ),
-        ],
-      ),
-    );
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchUsers();
   }
 
-  void _editUserDetails(BuildContext context, int index) {
-    final user = _users[index];
-    final TextEditingController nameController = TextEditingController(text: user['name']);
-    final TextEditingController phoneController = TextEditingController(text: user['phone']);
-    final TextEditingController serviceController = TextEditingController(text: user['service'] ?? '');
+  Future<void> _fetchUsers() async {
+    setState(() {
+      isLoading = true;
+    });
+    try {
+      final response = await apiService.get('/api/AdminDashboard/users?page=1&pageSize=50');
+      if (response is List) {
+        setState(() {
+          _users = response.map((user) {
+            return {
+              'id': user['id'],
+              'name': user['name'] ?? 'Unknown',
+              'status': user['status'] ?? 'Inactive',
+              'type': user['role'] ?? 'User',
+              'phone': user['phone'] ?? 'N/A',
+              'service': user['service'] ?? '', // For service providers
+            };
+          }).toList();
+        });
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error fetching users: $e')),
+      );
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
 
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Edit Details for ${user['name']}'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: nameController,
-              decoration: const InputDecoration(labelText: 'Name'),
-            ),
-            TextField(
-              controller: phoneController,
-              decoration: const InputDecoration(labelText: 'Phone'),
-              keyboardType: TextInputType.phone,
-            ),
-            if (user['type'] == 'Service Provider')
-              TextField(
-                controller: serviceController,
-                decoration: const InputDecoration(labelText: 'Service'),
-              ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('Cancel', style: TextStyle(color: Colors.grey[700])),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              setState(() {
-                _users[index]['name'] = nameController.text;
-                _users[index]['phone'] = phoneController.text;
-                if (user['type'] == 'Service Provider') {
-                  _users[index]['service'] = serviceController.text;
-                }
-              });
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('User details updated successfully!'),
-                  behavior: SnackBarBehavior.floating,
-                ),
-              );
-            },
-            child: const Text('Save'),
-          ),
-        ],
-      ),
-    );
+  Future<void> _toggleUserStatus(String userId, String currentStatus) async {
+    try {
+      if (currentStatus == 'Active') {
+        await apiService.post('/api/AdminDashboard/users/$userId/deactivate', {});
+        setState(() {
+          final userIndex = _users.indexWhere((user) => user['id'] == userId);
+          if (userIndex != -1) {
+            _users[userIndex]['status'] = 'Inactive';
+          }
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('User deactivated successfully!')),
+        );
+      } else {
+        // Simulate activation (add activation endpoint logic here)
+        setState(() {
+          final userIndex = _users.indexWhere((user) => user['id'] == userId);
+          if (userIndex != -1) {
+            _users[userIndex]['status'] = 'Active';
+          }
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('User activated successfully!')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error updating user status: $e')),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final filteredUsers = _users.where((user) {
       final query = _searchQuery.toLowerCase();
-      return user['name']!.toLowerCase().contains(query) ||
-          user['phone']!.toLowerCase().contains(query);
+      return user['name'].toLowerCase().contains(query) || user['phone'].toLowerCase().contains(query);
     }).toList();
 
     return Scaffold(
@@ -178,88 +118,80 @@ class _ManageAccountsPageState extends State<ManageAccountsPage> {
           ),
         ),
       ),
-      body: filteredUsers.isEmpty
-          ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.search_off, size: 48, color: Colors.grey),
-                  const SizedBox(height: 16),
-                  Text(
-                    'No users found',
-                    style: TextStyle(color: Colors.grey[600], fontSize: 16),
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : filteredUsers.isEmpty
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.search_off, size: 48, color: Colors.grey),
+                      const SizedBox(height: 16),
+                      Text(
+                        'No users found',
+                        style: TextStyle(color: Colors.grey[600], fontSize: 16),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-            )
-          : ListView.builder(
-              itemCount: filteredUsers.length,
-              itemBuilder: (context, index) {
-                final user = filteredUsers[index];
-                return Card(
-                  margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  elevation: 2,
-                  child: ListTile(
-                    contentPadding: const EdgeInsets.all(16),
-                    title: Text(
-                      user['name'] ?? 'No Name',
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 8),
-                        Row(
+                )
+              : ListView.builder(
+                  itemCount: filteredUsers.length,
+                  itemBuilder: (context, index) {
+                    final user = filteredUsers[index];
+                    return Card(
+                      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      elevation: 2,
+                      child: ListTile(
+                        contentPadding: const EdgeInsets.all(16),
+                        title: Text(
+                          user['name'] ?? 'No Name',
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: user['status'] == 'Active'
-                                    ? Colors.green.withOpacity(0.1)
-                                    : Colors.red.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: Text(
-                                user['status'] ?? '',
-                                style: TextStyle(
-                                  color: user['status'] == 'Active'
-                                      ? Colors.green
-                                      : Colors.red,
-                                  fontSize: 12,
+                            const SizedBox(height: 8),
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: user['status'] == 'Active'
+                                        ? Colors.green.withOpacity(0.1)
+                                        : Colors.red.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: Text(
+                                    user['status'] ?? '',
+                                    style: TextStyle(
+                                      color: user['status'] == 'Active' ? Colors.green : Colors.red,
+                                      fontSize: 12,
+                                    ),
+                                  ),
                                 ),
-                              ),
+                                const SizedBox(width: 8),
+                                Text(user['type'] ?? ''),
+                              ],
                             ),
-                            const SizedBox(width: 8),
-                            Text(user['type'] ?? ''),
                           ],
                         ),
-                      ],
-                    ),
-                    trailing: PopupMenuButton<String>(
-                      onSelected: (value) {
-                        if (value == 'Edit') {
-                          _editUserDetails(context, index);
-                        } else if (value == 'Toggle Status') {
-                          _changeUserStatus(
-                            context,
-                            _users.indexOf(user),
-                            user['status'] == 'Active' ? 'Inactive' : 'Active',
-                          );
-                        }
-                      },
-                      itemBuilder: (context) => [
-                        const PopupMenuItem(value: 'Edit', child: Text('Edit')),
-                        const PopupMenuItem(value: 'Toggle Status', child: Text('Toggle Status')),
-                      ],
-                    ),
-                    onTap: () => _editUserDetails(context, index),
-                  ),
-                );
-              },
-            ),
+                        trailing: PopupMenuButton<String>(
+                          onSelected: (value) {
+                            if (value == 'Toggle Status') {
+                              _toggleUserStatus(user['id'], user['status']);
+                            }
+                          },
+                          itemBuilder: (context) => [
+                            const PopupMenuItem(value: 'Toggle Status', child: Text('Toggle Status')),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
     );
   }
 }

@@ -6,6 +6,7 @@ import 'history_screen.dart';
 import 'home_screen.dart';
 import 'payment.dart';
 import 'location_screen.dart'; // Import LocationScreen
+import 'api_service.dart'; // Import your API service
 
 class AccountPage extends StatefulWidget {
   final List<Appointment> appointments;
@@ -18,6 +19,41 @@ class AccountPage extends StatefulWidget {
 
 class _AccountPageState extends State<AccountPage> {
   LatLng? _lastSavedLocation; // Variable to store the last saved location
+  final ApiService apiService = ApiService(baseUrl: 'http://localhost:5196'); // Replace with backend URL
+  String userName = "Fetching name..."; // Default placeholder for user name
+  bool isLoading = true; // Track loading state
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchUserProfile(); // Fetch user profile on initialization
+  }
+
+  Future<void> _fetchUserProfile() async {
+    try {
+      final response = await apiService.get('/api/UserDashboard/profile?userId=123'); // Adjust `userId` dynamically
+      if (response != null && response['name'] != null) {
+        setState(() {
+          userName = response['name']; // Fetch the user name
+        });
+      } else {
+        setState(() {
+          userName = "Unknown User";
+        });
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error fetching user profile: $e')),
+      );
+      setState(() {
+        userName = "Error fetching name";
+      });
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,13 +68,15 @@ class _AccountPageState extends State<AccountPage> {
               children: [
                 const CircleAvatar(
                   radius: 50,
-                  backgroundImage: AssetImage('images/profile.png'),
+                  backgroundImage: AssetImage('images/profile.png'), // Static profile image for all users
                 ),
                 const SizedBox(height: 8),
-                const Text(
-                  'New User',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
+                isLoading
+                    ? const CircularProgressIndicator() // Loading spinner while fetching data
+                    : Text(
+                        userName, // Display dynamic user name
+                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
                 const SizedBox(height: 8),
                 TextButton(
                   onPressed: () {

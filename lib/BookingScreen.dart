@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'home_screen.dart';
+import 'api_service.dart';
 
 class BookingScreen extends StatefulWidget {
   final String providerName;
+  final int providerId; // Add the provider's ID for API integration
   final Function(Appointment) onBooked;
 
   const BookingScreen({
     required this.providerName,
+    required this.providerId,
     required this.onBooked,
     super.key,
   });
@@ -16,9 +19,13 @@ class BookingScreen extends StatefulWidget {
 }
 
 class _BookingScreenState extends State<BookingScreen> {
+  final ApiService apiService = ApiService(baseUrl: 'http://localhost:5196'); // Update with your backend URL
   final TextEditingController _issueController = TextEditingController();
   final TextEditingController _dateController = TextEditingController();
   final TextEditingController _timeController = TextEditingController();
+
+  String _selectedUrgency = "Normal"; // Default urgency level
+  final List<String> _urgencyLevels = ["Low", "Normal", "High"]; // Urgency levels as strings
 
   Future<void> _selectDate() async {
     DateTime? pickedDate = await showDatePicker(
@@ -41,7 +48,6 @@ class _BookingScreenState extends State<BookingScreen> {
     );
 
     if (pickedTime != null) {
-      // Restrict time selection between 9 AM and 5 PM
       if (pickedTime.hour < 9 || pickedTime.hour >= 17) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -57,19 +63,42 @@ class _BookingScreenState extends State<BookingScreen> {
     }
   }
 
-  void _confirmBooking() {
+  Future<void> _confirmBooking() async {
     if (_issueController.text.isNotEmpty &&
         _dateController.text.isNotEmpty &&
         _timeController.text.isNotEmpty) {
-      widget.onBooked(
-        Appointment(
-          providerName: widget.providerName,
-          issueDescription: _issueController.text,
-          date: _dateController.text,
-          time: _timeController.text,
-        ),
-      );
-      Navigator.pop(context);
+      try {
+        final response = await apiService.post('/api/Booking', {
+          "serviceId": 1, // Replace with the actual service ID
+          "serviceProviderId": widget.providerId,
+          "userId": 123, // Replace with the actual user ID
+          "appointmentDate": "${_dateController.text} ${_timeController.text}",
+          "issueDescription": _issueController.text,
+          "urgencyLevel": _selectedUrgency, // Pass the urgency level as a string
+        });
+
+        if (response != null) {
+          widget.onBooked(
+            Appointment(
+              providerName: widget.providerName,
+              issueDescription: _issueController.text,
+              date: _dateController.text,
+              time: _timeController.text,
+            ),
+          );
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Booking confirmed successfully!')),
+          );
+          Navigator.pop(context);
+        }
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error confirming booking: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -133,6 +162,26 @@ class _BookingScreenState extends State<BookingScreen> {
                 hintText: 'Choose a time for your appointment',
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 prefixIcon: const Icon(Icons.access_time, color: Colors.blue),
+              ),
+            ),
+            const SizedBox(height: 20),
+            DropdownButtonFormField<String>(
+              value: _selectedUrgency,
+              items: _urgencyLevels
+                  .map((level) => DropdownMenuItem<String>(
+                        value: level,
+                        child: Text(level),
+                      ))
+                  .toList(),
+              onChanged: (value) {
+                setState(() {
+                  _selectedUrgency = value!;
+                });
+              },
+              decoration: InputDecoration(
+                labelText: 'Select Urgency Level',
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                prefixIcon: const Icon(Icons.priority_high, color: Colors.blue),
               ),
             ),
             const SizedBox(height: 30),

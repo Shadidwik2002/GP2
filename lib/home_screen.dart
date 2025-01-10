@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'api_service.dart'; // Import your API service
 import 'account_page.dart';
 import 'Provider_List.dart';
 import 'reschedule_screen.dart';
@@ -25,39 +26,93 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  final ApiService apiService = ApiService(baseUrl: 'http://localhost:5196'); // Update with your backend URL
   final List<Appointment> _appointments = [];
-  final List<Appointment> _allAppointments = []; // List to maintain history
-  final List<Map<String, String>> _services = [
-    {'title': 'House Cleaning', 'price': '15 JD', 'image': 'images/house_cleaning.jpg'},
-    {'title': 'Plumbing', 'price': '8 JD', 'image': 'images/plumbing.jpg'},
-    {'title': 'Home devices maintenance', 'price': '10 JD', 'image': 'images/devices_maintenance.jpg'},
-    {'title': 'Electrician', 'price': '15 JD', 'image': 'images/electrician.jpg'},
-  ];
-
+  final List<Appointment> _allAppointments = [];
+  List<Map<String, dynamic>> _services = []; // Replace hardcoded services
   String _searchQuery = '';
-  late List<Map<String, String>> _filteredServices;
+  bool isLoading = true; // Track loading state
   int _currentIndex = 0;
 
   @override
   void initState() {
     super.initState();
-    _filteredServices = _services;
+    _fetchServices(); // Fetch services on screen load
+    _fetchAppointments(); // Fetch appointments on screen load
+  }
+
+  Future<void> _fetchServices() async {
+    setState(() {
+      isLoading = true;
+    });
+    try {
+      final response = await apiService.get('/api/AdminDashboard/services'); // Adjust endpoint if necessary
+      if (response is List) {
+        setState(() {
+          _services = response.map((service) {
+            return {
+              'id': service['id'],
+              'title': service['name'],
+              'price': '${service['price']} JD',
+              'image': 'images/default_service.jpg', // Placeholder image path
+              'description': service['description'],
+            };
+          }).toList();
+        });
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error fetching services: $e')),
+      );
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _fetchAppointments() async {
+    setState(() {
+      isLoading = true;
+    });
+    try {
+      // Fetch scheduled appointments
+      final response = await apiService.get('/api/UserDashboard/appointments');
+      if (response is List) {
+        setState(() {
+          _appointments.clear(); // Clear previous appointments
+          for (var item in response) {
+            _appointments.add(Appointment(
+              providerName: item['providerName'] ?? 'Unknown Provider',
+              issueDescription: item['issueDescription'] ?? 'No description',
+              date: item['appointmentDate']?.split('T')?.first ?? 'N/A', // Extract date
+              time: item['appointmentDate']?.split('T')?.last ?? 'N/A', // Extract time
+            ));
+          }
+        });
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error fetching appointments: $e')),
+      );
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
   }
 
   void _filterServices(String query) {
     setState(() {
       _searchQuery = query;
-      _filteredServices = query.isEmpty
-          ? _services
-          : _services.where((service) => service['title']!.toLowerCase().contains(query.toLowerCase())).toList();
     });
   }
 
   void _addAppointment(Appointment appointment) {
     setState(() {
       _appointments.add(appointment);
-      _allAppointments.add(appointment); // Add to history
-      _currentIndex = 1; // Automatically switch to Schedule tab
+      _allAppointments.add(appointment);
+      _currentIndex = 1;
     });
   }
 
@@ -81,7 +136,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _cancelAppointment(Appointment appointment) {
     setState(() {
-      _appointments.remove(appointment); // Remove from current schedule
+      _appointments.remove(appointment);
     });
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Appointment canceled')),
@@ -90,9 +145,14 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final filteredServices = _services.where((service) {
+      final query = _searchQuery.toLowerCase();
+      return service['title'].toLowerCase().contains(query);
+    }).toList();
+
     return Scaffold(
       appBar: AppBar(
-        automaticallyImplyLeading: false, // Removes the back arrow
+        automaticallyImplyLeading: false,
         backgroundColor: Colors.white,
         elevation: 0,
         title: _currentIndex == 0
@@ -115,20 +175,29 @@ class _HomeScreenState extends State<HomeScreen> {
         index: _currentIndex,
         children: [
           // Services Page
-          ListView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
-            itemCount: _filteredServices.length,
-            itemBuilder: (context, index) {
-              final service = _filteredServices[index];
-              return _buildServiceCard(service['title']!, service['price']!, service['image']!, context);
-            },
-          ),
+          isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : filteredServices.isEmpty
+                  ? const Center(child: Text('No services found'))
+                  : ListView.builder(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
+                      itemCount: filteredServices.length,
+                      itemBuilder: (context, index) {
+                        final service = filteredServices[index];
+                        return _buildServiceCard(
+                          service['title'],
+                          service['price'],
+                          service['image'],
+                          context,
+                        );
+                      },
+                    ),
 
           // Schedule Page
           _buildSchedulePage(),
 
           // Account Page
-          AccountPage(appointments: _allAppointments), // Pass all appointments to history
+          AccountPage(appointments: _allAppointments),
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
@@ -144,45 +213,47 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildSchedulePage() {
-    return _appointments.isEmpty
-        ? const Center(child: Text('No appointments scheduled yet.'))
-        : ListView.builder(
-            itemCount: _appointments.length,
-            itemBuilder: (context, index) {
-              final appointment = _appointments[index];
-              return Card(
-                margin: const EdgeInsets.all(10),
-                child: Padding(
-                  padding: const EdgeInsets.all(10),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      ListTile(
-                        title: Text(appointment.providerName),
-                        subtitle: Text(
-                          'Issue: ${appointment.issueDescription}\nDate: ${appointment.date} at ${appointment.time}',
-                        ),
-                        leading: const Icon(Icons.event, color: Colors.blue),
-                      ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
+    return isLoading
+        ? const Center(child: CircularProgressIndicator())
+        : _appointments.isEmpty
+            ? const Center(child: Text('No appointments scheduled yet.'))
+            : ListView.builder(
+                itemCount: _appointments.length,
+                itemBuilder: (context, index) {
+                  final appointment = _appointments[index];
+                  return Card(
+                    margin: const EdgeInsets.all(10),
+                    child: Padding(
+                      padding: const EdgeInsets.all(10),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          TextButton(
-                            onPressed: () => _rescheduleAppointment(appointment),
-                            child: const Text('Reschedule'),
+                          ListTile(
+                            title: Text(appointment.providerName),
+                            subtitle: Text(
+                              'Issue: ${appointment.issueDescription}\nDate: ${appointment.date} at ${appointment.time}',
+                            ),
+                            leading: const Icon(Icons.event, color: Colors.blue),
                           ),
-                          TextButton(
-                            onPressed: () => _cancelAppointment(appointment),
-                            child: const Text('Cancel', style: TextStyle(color: Colors.red)),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              TextButton(
+                                onPressed: () => _rescheduleAppointment(appointment),
+                                child: const Text('Reschedule'),
+                              ),
+                              TextButton(
+                                onPressed: () => _cancelAppointment(appointment),
+                                child: const Text('Cancel', style: TextStyle(color: Colors.red)),
+                              ),
+                            ],
                           ),
                         ],
                       ),
-                    ],
-                  ),
-                ),
+                    ),
+                  );
+                },
               );
-            },
-          );
   }
 
   Widget _buildServiceCard(String title, String price, String imagePath, BuildContext context) {

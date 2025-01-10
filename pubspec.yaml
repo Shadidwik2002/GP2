@@ -14,6 +14,7 @@ dependencies:
   geocoding: ^3.0.0            # For reverse geocoding (LatLng to address)
   cupertino_icons: ^1.0.8
   http: ^1.0.0
+  intl: ^0.20.1
   
 dev_dependencies:
   flutter_test:

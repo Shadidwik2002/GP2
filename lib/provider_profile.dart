@@ -126,24 +126,7 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
             ),
             const SizedBox(height: 24),
 
-            // Experience Section
-            const Text(
-              'Experience',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            _buildExperienceTile(
-              companyName: 'TaskRabbit',
-              role: 'Maintenance Professional',
-              years: '2019-2022',
-            ),
-            _buildExperienceTile(
-              companyName: 'Handy',
-              role: 'Maintenance Professional',
-              years: '2017-2019',
-            ),
-
-            const SizedBox(height: 24),
+            
 
             // History Button
             ListTile(

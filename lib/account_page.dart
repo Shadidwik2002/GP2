@@ -21,7 +21,9 @@ class _AccountPageState extends State<AccountPage> {
   LatLng? _lastSavedLocation; // Variable to store the last saved location
   final ApiService apiService = ApiService(baseUrl: 'http://localhost:5196'); // Replace with backend URL
   String userName = "Fetching name..."; // Default placeholder for user name
+  String _phoneNumber = ""; // Variable to store phone number
   bool isLoading = true; // Track loading state
+  final int userId = 123; // Add userId variable
 
   @override
   void initState() {
@@ -31,14 +33,16 @@ class _AccountPageState extends State<AccountPage> {
 
   Future<void> _fetchUserProfile() async {
     try {
-      final response = await apiService.get('/api/UserDashboard/profile?userId=123'); // Adjust `userId` dynamically
-      if (response != null && response['name'] != null) {
+      final response = await apiService.get('/api/UserDashboard/profile?userId=$userId'); // Use userId dynamically
+      if (response != null) {
         setState(() {
-          userName = response['name']; // Fetch the user name
+          userName = response['name'] ?? "Unknown User"; // Fetch user name
+          _phoneNumber = response['phoneNumber'] ?? ""; // Fetch and store phone number
         });
       } else {
         setState(() {
           userName = "Unknown User";
+          _phoneNumber = ""; // Default to empty if no phone number
         });
       }
     } catch (e) {
@@ -47,6 +51,7 @@ class _AccountPageState extends State<AccountPage> {
       );
       setState(() {
         userName = "Error fetching name";
+        _phoneNumber = ""; // Default to empty on error
       });
     } finally {
       setState(() {
@@ -83,7 +88,7 @@ class _AccountPageState extends State<AccountPage> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const EditProfileScreen(),
+                        builder: (context) => EditProfileScreen(phoneNumber: _phoneNumber), // Pass the phone number
                       ),
                     );
                   },
@@ -105,8 +110,7 @@ class _AccountPageState extends State<AccountPage> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) =>
-                      HistoryScreen(appointments: widget.appointments),
+                  builder: (context) => HistoryScreen(userId: userId), // Pass userId to HistoryScreen
                 ),
               );
             },

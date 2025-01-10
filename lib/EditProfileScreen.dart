@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'verification_screen.dart';
+import 'verification_change_number.dart'; // Import your updated screen
 import 'Change_password.dart';
 
 class EditProfileScreen extends StatefulWidget {
-  const EditProfileScreen({super.key});
+  final String phoneNumber; // Accept phone number as an argument
+
+  const EditProfileScreen({super.key, required this.phoneNumber});
 
   @override
   _EditProfileScreenState createState() => _EditProfileScreenState();
@@ -13,10 +15,24 @@ class EditProfileScreen extends StatefulWidget {
 class _EditProfileScreenState extends State<EditProfileScreen> {
   final TextEditingController _firstNameController = TextEditingController();
   final TextEditingController _lastNameController = TextEditingController();
-  final TextEditingController _phoneNumberController = TextEditingController();
+  late TextEditingController _phoneNumberController; // Use phone number controller
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   final Color _primaryColor = const Color(0xFF2196F3);
+
+  @override
+  void initState() {
+    super.initState();
+    _phoneNumberController = TextEditingController(text: widget.phoneNumber); // Initialize with phone number
+  }
+
+  @override
+  void dispose() {
+    _phoneNumberController.dispose();
+    _firstNameController.dispose();
+    _lastNameController.dispose();
+    super.dispose();
+  }
 
   String? _validateFirstName(String? value) {
     if (value == null || value.isEmpty || value.length < 3 || !RegExp(r'^[a-zA-Z]+$').hasMatch(value)) {
@@ -58,12 +74,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         elevation: 1,
-        title: const Text('Edit Profile', 
+        title: const Text(
+          'Edit Profile',
           style: TextStyle(
             fontWeight: FontWeight.bold,
             color: Colors.black87,
             fontSize: 20,
-          )
+          ),
         ),
         backgroundColor: Colors.white,
         centerTitle: true,
@@ -199,7 +216,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => VerificationScreen(phoneNumber: _phoneNumberController.text),
+              builder: (context) =>
+                  VerificationScreen(phoneNumber: _phoneNumberController.text), // Pass to verification
             ),
           );
         } else {
@@ -237,7 +255,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         onPressed: () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => const ChangePasswordScreen()),
+            MaterialPageRoute(
+              builder: (context) => ChangePasswordScreen(phoneNumber: _phoneNumberController.text),
+            ),
           );
         },
         icon: const Icon(Icons.lock_outline, color: Colors.white),

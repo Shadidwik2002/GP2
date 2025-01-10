@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'new_password_screen.dart'; // Import the new password screen
+import 'api_service.dart'; // Import your ApiService class
 
 class VerificationForgotPassword extends StatefulWidget {
-  const VerificationForgotPassword({super.key});
+  final String phoneNumber; // Accept the phone number as a parameter
+
+  const VerificationForgotPassword({super.key, required this.phoneNumber});
 
   @override
   _VerificationForgotPasswordState createState() =>
@@ -14,31 +17,62 @@ class _VerificationForgotPasswordState
   final List<TextEditingController> _controllers =
       List.generate(6, (index) => TextEditingController()); // Updated to 6 digits
   String? warningMessage;
+  bool isLoading = false; // To track loading state
 
-  void _verifyCode() {
+  final ApiService apiService =
+      ApiService(baseUrl: 'https://your-api-url.com'); // Replace with your base URL
+
+  Future<void> _verifyCode() async {
     // Extract the code from the controllers
     String enteredCode = _controllers.map((controller) => controller.text).join();
 
-    setState(() {
-      // Placeholder for backend integration
-      print("Entered Code: $enteredCode");
+    if (enteredCode.isEmpty || enteredCode.length != 6) {
+      setState(() {
+        warningMessage = 'Please enter a valid 6-digit code.';
+      });
+      return;
+    }
 
-      // Replace with actual backend logic
-      // For now, just log a placeholder message
-      if (enteredCode.isEmpty) {
-        warningMessage = 'Code cannot be empty. Please try again.'; // Example warning
-      } else {
-        // Call backend API to verify the code and navigate accordingly
+    setState(() {
+      isLoading = true;
+      warningMessage = null;
+    });
+
+    try {
+      // Call the API using ApiService
+      final response = await apiService.post(
+        '/api/Account/verify-code',
+        {'phoneNumber': widget.phoneNumber, 'code': enteredCode},
+      );
+
+      // Handle success response
+      if (response != null) {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => const NewPasswordScreen()),
+          MaterialPageRoute(
+            builder: (context) => NewPasswordScreen(phoneNumber: widget.phoneNumber),
+          ),
         );
       }
-    });
+    } catch (e) {
+      // Handle error
+      setState(() {
+        warningMessage = 'Verification failed. Please try again.';
+      });
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    // Mask the phone number to display only the last 4 digits
+    String maskedPhoneNumber = widget.phoneNumber.length > 4
+        ? '${'*' * (widget.phoneNumber.length - 4)}${widget.phoneNumber.substring(widget.phoneNumber.length - 4)}'
+        : widget.phoneNumber;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text(
@@ -74,10 +108,10 @@ class _VerificationForgotPasswordState
                 ),
               ),
               const SizedBox(height: 10),
-              const Text(
-                'Please enter the 6-digit code sent to your registered phone number.',
+              Text(
+                'Please enter the 6-digit code sent to \n$maskedPhoneNumber',
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 16, color: Colors.grey),
+                style: const TextStyle(fontSize: 16, color: Colors.grey),
               ),
               const SizedBox(height: 30),
 
@@ -104,7 +138,7 @@ class _VerificationForgotPasswordState
                       textAlign: TextAlign.center,
                       maxLength: 1,
                       buildCounter: (_, {int currentLength = 0, int? maxLength, bool? isFocused}) =>
-                          const SizedBox.shrink(), // Updated to fix null issue
+                          const SizedBox.shrink(),
                     ),
                   );
                 }),
@@ -124,7 +158,7 @@ class _VerificationForgotPasswordState
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: _verifyCode,
+                  onPressed: isLoading ? null : _verifyCode,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF2094F3),
                     padding: const EdgeInsets.symmetric(vertical: 14),
@@ -132,13 +166,15 @@ class _VerificationForgotPasswordState
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: const Text(
-                    'Verify',
-                    style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white),
-                  ),
+                  child: isLoading
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : const Text(
+                          'Verify',
+                          style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white),
+                        ),
                 ),
               ),
             ],

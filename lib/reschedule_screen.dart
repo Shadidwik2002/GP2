@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'home_screen.dart';
+import 'api_service.dart'; // Import your API service
+import 'home_screen.dart'; // Import Appointment class
 
 class RescheduleScreen extends StatefulWidget {
   final Appointment appointment;
@@ -11,17 +12,28 @@ class RescheduleScreen extends StatefulWidget {
 }
 
 class _RescheduleScreenState extends State<RescheduleScreen> {
+  final ApiService apiService = ApiService(baseUrl: 'http://localhost:5196');
   final TextEditingController _dateController = TextEditingController();
   String? _selectedTimeSlot;
 
-  final List<String> _availableTimeSlots = [
-    '9:00 AM',
-    '10:00 AM',
-    '11:00 AM',
-    '1:00 PM',
-    '2:00 PM',
-    '3:00 PM',
-  ];
+  // Generate time slots from 9 AM to 5 PM with 1-hour intervals
+  List<String> _availableTimeSlots = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _generateTimeSlots();
+  }
+
+  // Generate time slots from 9:00 AM to 5:00 PM (1-hour intervals)
+  void _generateTimeSlots() {
+    _availableTimeSlots = List.generate(9, (index) {
+      int hour = 9 + index;
+      String period = hour < 12 ? "AM" : "PM";
+      int hourIn12Format = hour > 12 ? hour - 12 : hour;
+      return "$hourIn12Format:00 $period";
+    });
+  }
 
   Future<void> _selectDate() async {
     DateTime? pickedDate = await showDatePicker(
@@ -37,12 +49,32 @@ class _RescheduleScreenState extends State<RescheduleScreen> {
     }
   }
 
-  void _confirmRescheduling() {
+  Future<void> _confirmRescheduling() async {
     if (_dateController.text.isNotEmpty && _selectedTimeSlot != null) {
-      Navigator.pop(context, {
-        'date': _dateController.text,
-        'time': _selectedTimeSlot,
-      });
+      String newAppointmentDate = "${_dateController.text} ${_selectedTimeSlot}:00";
+
+      // Prepare data to send to API
+      try {
+        final response = await apiService.post('/api/UserDashboard/reschedule', {
+          'bookingId': widget.appointment.providerName,  // Example of using the appointment, replace with bookingId
+          'newAppointmentDate': newAppointmentDate,
+        });
+
+        if (response != null) {
+          Navigator.pop(context, {
+            'date': _dateController.text,
+            'time': _selectedTimeSlot,
+          });
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Booking rescheduled successfully!')),
+          );
+        }
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error rescheduling booking: $e')),
+        );
+      }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please select a date and time slot.')),

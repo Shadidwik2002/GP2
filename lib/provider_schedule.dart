@@ -1,9 +1,46 @@
 import 'package:flutter/material.dart';
+import 'api_service.dart'; // Import your ApiService class
 
-class ProviderSchedulePage extends StatelessWidget {
-  final List<Map<String, String>> acceptedRequests;
+class ProviderSchedulePage extends StatefulWidget {
+  const ProviderSchedulePage({super.key, required List<Map<String, String>> acceptedRequests});
 
-  const ProviderSchedulePage({super.key, required this.acceptedRequests});
+  @override
+  _ProviderSchedulePageState createState() => _ProviderSchedulePageState();
+}
+
+class _ProviderSchedulePageState extends State<ProviderSchedulePage> {
+  final ApiService apiService = ApiService(baseUrl: 'https://your-api-url.com'); // Initialize ApiService
+  List<Map<String, String>> acceptedRequests = []; // Will hold accepted requests
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchAcceptedRequests(); // Fetch accepted requests from the API
+  }
+
+  Future<void> _fetchAcceptedRequests() async {
+    try {
+      final response = await apiService.get('/api/ProviderDashboard/bookings?providerId=1'); // Use actual providerId here
+      if (response != null && response is List) {
+        setState(() {
+          acceptedRequests = List<Map<String, String>>.from(response.map((item) {
+            return {
+              'id': item['id'].toString(),
+              'service': item['service'],
+              'customerName': item['customerName'],
+              'time': item['time'],
+              'location': item['location'],
+              'status': item['status'] ?? 'Pending', // Ensure 'status' exists
+            };
+          }));
+        });
+      } else {
+        print('Error: No accepted requests found.');
+      }
+    } catch (e) {
+      print('Error fetching accepted requests: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {

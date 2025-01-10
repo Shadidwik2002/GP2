@@ -1,45 +1,56 @@
 import 'package:flutter/material.dart';
-import 'api_service.dart';
+import 'api_service.dart'; // Import your API service
 
 class VerificationScreen extends StatelessWidget {
-  final String phoneNumber;
+  final String phoneNumber; // Phone number received from EditProfileScreen
+  final ApiService apiService =
+      ApiService(baseUrl: 'https://your-api-url.com'); // Replace with actual base URL
 
-  const VerificationScreen({super.key, required this.phoneNumber});
-
-  Future<void> verifyCode(
-      String phoneNumber, String code, BuildContext context) async {
-    final ApiService apiService =
-        ApiService(baseUrl: 'http://localhost:5196'); // Replace with your base URL
-
-    try {
-      final response = await apiService.post('/api/Account/verify-code', {
-        'phoneNumber': phoneNumber,
-        'code': code,
-      });
-
-      // Handle successful response
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Verification successful!'),
-          backgroundColor: Colors.green,
-        ),
-      );
-      Navigator.pushNamed(context, '/nextScreen'); // Navigate to the next screen
-    } catch (e) {
-      // Handle error response
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Verification failed: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
-  }
+  VerificationScreen({super.key, required this.phoneNumber});
 
   @override
   Widget build(BuildContext context) {
+    // Mask the phone number to show only the last 4 digits
+    String maskedPhoneNumber = phoneNumber.length > 4
+        ? '${'*' * (phoneNumber.length - 4)}${phoneNumber.substring(phoneNumber.length - 4)}'
+        : phoneNumber;
+
+    // Controllers for the verification input fields
     final List<TextEditingController> controllers =
         List.generate(6, (index) => TextEditingController());
+
+    Future<void> _verifyCode(String phoneNumber, String code) async {
+      try {
+        final response = await apiService.post('/api/Account/verify-code', {
+          'phoneNumber': phoneNumber,
+          'code': code,
+        });
+
+        if (response != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Verification successful!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          Navigator.pop(context); // Navigate back on success
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Invalid verification code. Please try again.'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
 
     return Scaffold(
       backgroundColor: const Color(0xFFF9FAFB),
@@ -58,6 +69,8 @@ class VerificationScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             const SizedBox(height: 30),
+
+            // Top Icon
             Container(
               padding: const EdgeInsets.all(15),
               decoration: BoxDecoration(
@@ -71,6 +84,8 @@ class VerificationScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 20),
+
+            // Heading
             const Text(
               'Enter Verification Code',
               style: TextStyle(
@@ -81,12 +96,16 @@ class VerificationScreen extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 10),
+
+            // Description
             Text(
-              'We have sent a 6-digit verification code to $phoneNumber',
+              'We have sent a 6-digit verification code to \n$maskedPhoneNumber',
               style: const TextStyle(fontSize: 16, color: Colors.grey),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 30),
+
+            // Input fields for verification code
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: List.generate(6, (index) {
@@ -121,13 +140,16 @@ class VerificationScreen extends StatelessWidget {
               }),
             ),
             const SizedBox(height: 30),
+
+            // Buttons
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
+                // Cancel Button
                 Expanded(
                   child: ElevatedButton(
                     onPressed: () {
-                      Navigator.pop(context);
+                      Navigator.pop(context); // Navigate back
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.white,
@@ -143,19 +165,23 @@ class VerificationScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 15),
+
+                // Verify Button
                 Expanded(
                   child: ElevatedButton(
                     onPressed: () {
+                      // Combine entered code
                       String enteredCode = controllers
                           .map((controller) => controller.text)
                           .join();
 
                       if (enteredCode.length == 6) {
-                        verifyCode(phoneNumber, enteredCode, context);
+                        // Verify the code using the API
+                        _verifyCode(phoneNumber, enteredCode);
                       } else {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
-                            content: Text('Please enter a valid 6-digit code.'),
+                            content: Text('Please enter all 6 digits.'),
                             backgroundColor: Colors.red,
                           ),
                         );

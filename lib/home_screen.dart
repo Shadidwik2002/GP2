@@ -1,5 +1,7 @@
+// home_screen.dart
+
 import 'package:flutter/material.dart';
-import 'api_service.dart'; // Import your API service
+import 'api_service.dart';
 import 'account_page.dart';
 import 'Provider_List.dart';
 import 'reschedule_screen.dart';
@@ -26,19 +28,19 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final ApiService apiService = ApiService(baseUrl: 'http://localhost:5196'); // Update with your backend URL
+  final ApiService apiService = ApiService(baseUrl: 'http://localhost:5196');
   final List<Appointment> _appointments = [];
   final List<Appointment> _allAppointments = [];
-  List<Map<String, dynamic>> _services = []; // Replace hardcoded services
+  List<Map<String, dynamic>> _services = [];
   String _searchQuery = '';
-  bool isLoading = true; // Track loading state
+  bool isLoading = true;
   int _currentIndex = 0;
 
   @override
   void initState() {
     super.initState();
-    _fetchServices(); // Fetch services on screen load
-    _fetchAppointments(); // Fetch appointments on screen load
+    _fetchServices();
+    _fetchAppointments();
   }
 
   Future<void> _fetchServices() async {
@@ -46,7 +48,7 @@ class _HomeScreenState extends State<HomeScreen> {
       isLoading = true;
     });
     try {
-      final response = await apiService.get('/api/AdminDashboard/services'); // Adjust endpoint if necessary
+      final response = await apiService.get('/api/AdminDashboard/services');
       if (response is List) {
         setState(() {
           _services = response.map((service) {
@@ -54,7 +56,6 @@ class _HomeScreenState extends State<HomeScreen> {
               'id': service['id'],
               'title': service['name'],
               'price': '${service['price']} JD',
-              'image': 'images/default_service.jpg', // Placeholder image path
               'description': service['description'],
             };
           }).toList();
@@ -76,17 +77,16 @@ class _HomeScreenState extends State<HomeScreen> {
       isLoading = true;
     });
     try {
-      // Fetch scheduled appointments
       final response = await apiService.get('/api/UserDashboard/appointments');
       if (response is List) {
         setState(() {
-          _appointments.clear(); // Clear previous appointments
+          _appointments.clear();
           for (var item in response) {
             _appointments.add(Appointment(
               providerName: item['providerName'] ?? 'Unknown Provider',
               issueDescription: item['issueDescription'] ?? 'No description',
-              date: item['appointmentDate']?.split('T')?.first ?? 'N/A', // Extract date
-              time: item['appointmentDate']?.split('T')?.last ?? 'N/A', // Extract time
+              date: item['appointmentDate']?.split('T')?.first ?? 'N/A',
+              time: item['appointmentDate']?.split('T')?.last ?? 'N/A',
             ));
           }
         });
@@ -129,17 +129,151 @@ class _HomeScreenState extends State<HomeScreen> {
         appointment.time = result['time'];
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Booking rescheduled to ${appointment.date} at ${appointment.time}')),
+        SnackBar(
+          content: Text('Booking rescheduled to ${appointment.date} at ${appointment.time}'),
+        ),
       );
     }
   }
 
-  void _cancelAppointment(Appointment appointment) {
+ void _cancelAppointment(Appointment appointment, int bookingId) async {
+  try {
+    // Show loading indicator
     setState(() {
-      _appointments.remove(appointment);
+      isLoading = true;
     });
+
+    // Make the API call
+    final response = await apiService.post('/api/Booking/cancel', {
+      "bookingId": bookingId, // Send the booking ID
+    });
+
+    if (response != null) {
+      setState(() {
+        _appointments.remove(appointment); // Remove the appointment from the list
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Appointment canceled successfully.')),
+      );
+    }
+  } catch (e) {
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Appointment canceled')),
+      SnackBar(content: Text('Failed to cancel appointment: $e')),
+    );
+  } finally {
+    // Hide loading indicator
+    setState(() {
+      isLoading = false;
+    });
+  }
+}
+
+
+ Widget _buildSchedulePage() {
+  return isLoading
+      ? const Center(child: CircularProgressIndicator())
+      : _appointments.isEmpty
+          ? const Center(child: Text('No appointments scheduled yet.'))
+          : ListView.builder(
+              itemCount: _appointments.length,
+              itemBuilder: (context, index) {
+                final appointment = _appointments[index];
+                final bookingId = 123; // Replace with actual bookingId from your data
+                return Card(
+                  margin: const EdgeInsets.all(10),
+                  child: Padding(
+                    padding: const EdgeInsets.all(10),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        ListTile(
+                          title: Text(appointment.providerName),
+                          subtitle: Text(
+                            'Issue: ${appointment.issueDescription}\nDate: ${appointment.date} at ${appointment.time}',
+                          ),
+                          leading: const Icon(Icons.event, color: Colors.blue),
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            TextButton(
+                              onPressed: () => _rescheduleAppointment(appointment),
+                              child: const Text('Reschedule'),
+                            ),
+                            TextButton(
+                              onPressed: () => _cancelAppointment(appointment, bookingId),
+                              child: const Text(
+                                'Cancel',
+                                style: TextStyle(color: Colors.red),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            );
+}
+
+
+  Widget _buildServiceCard(String title, String price, String imagePath, BuildContext context, int serviceId) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ProviderList(
+              serviceId: serviceId,
+              onAppointmentBooked: _addAppointment,
+            ),
+          ),
+        );
+      },
+      child: Card(
+        margin: const EdgeInsets.only(bottom: 20),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+        elevation: 5,
+        child: Padding(
+          padding: const EdgeInsets.all(12.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ClipRRect(
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(15),
+                  topRight: Radius.circular(15),
+                ),
+                child: Image.asset(
+                  imagePath,
+                  height: 180,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 5),
+                    Text(
+                      price,
+                      style: const TextStyle(fontSize: 16, color: Colors.grey),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -187,8 +321,9 @@ class _HomeScreenState extends State<HomeScreen> {
                         return _buildServiceCard(
                           service['title'],
                           service['price'],
-                          service['image'],
+                          'images/electrician.jpg',
                           context,
+                          service['id'],
                         );
                       },
                     ),
@@ -208,102 +343,6 @@ class _HomeScreenState extends State<HomeScreen> {
           BottomNavigationBarItem(icon: Icon(Icons.account_circle), label: 'Account'),
         ],
         onTap: (index) => setState(() => _currentIndex = index),
-      ),
-    );
-  }
-
-  Widget _buildSchedulePage() {
-    return isLoading
-        ? const Center(child: CircularProgressIndicator())
-        : _appointments.isEmpty
-            ? const Center(child: Text('No appointments scheduled yet.'))
-            : ListView.builder(
-                itemCount: _appointments.length,
-                itemBuilder: (context, index) {
-                  final appointment = _appointments[index];
-                  return Card(
-                    margin: const EdgeInsets.all(10),
-                    child: Padding(
-                      padding: const EdgeInsets.all(10),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          ListTile(
-                            title: Text(appointment.providerName),
-                            subtitle: Text(
-                              'Issue: ${appointment.issueDescription}\nDate: ${appointment.date} at ${appointment.time}',
-                            ),
-                            leading: const Icon(Icons.event, color: Colors.blue),
-                          ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: [
-                              TextButton(
-                                onPressed: () => _rescheduleAppointment(appointment),
-                                child: const Text('Reschedule'),
-                              ),
-                              TextButton(
-                                onPressed: () => _cancelAppointment(appointment),
-                                child: const Text('Cancel', style: TextStyle(color: Colors.red)),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              );
-  }
-
-  Widget _buildServiceCard(String title, String price, String imagePath, BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => ProviderList(onAppointmentBooked: _addAppointment),
-          ),
-        );
-      },
-      child: Card(
-        margin: const EdgeInsets.only(bottom: 20),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-        elevation: 5,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            ClipRRect(
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(15),
-                topRight: Radius.circular(15),
-              ),
-              child: Image.asset(
-                imagePath,
-                height: 180,
-                width: double.infinity,
-                fit: BoxFit.cover,
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(12.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 5),
-                  Text(
-                    price,
-                    style: const TextStyle(fontSize: 16, color: Colors.grey),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

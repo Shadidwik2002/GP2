@@ -5,7 +5,6 @@ import 'home_screen.dart';
 import 'forgot_password_screen.dart';
 import 'account_type.dart';
 import 'admin_dashboard.dart';
-import 'package:gp2/api_service.dart';
 
 void main() {
   runApp(const MyApp());
@@ -33,15 +32,11 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final ApiService apiService = ApiService(baseUrl: 'http://localhost:5196'); // Update with your backend URL
 
   bool _isPasswordVisible = false;
   String? _phoneError;
   String? _passwordError;
-  bool _isLoading = false;
-
-  String _selectedTab = 'User'; // Default to 'User'
-
+  String _selectedTab = 'User'; // Default tab
 
   @override
   void dispose() {
@@ -67,53 +62,39 @@ class _LoginScreenState extends State<LoginScreen> {
     });
   }
 
-  Future<void> _login() async {
+  void _login() {
     _validateFields();
 
     if (_phoneError == null && _passwordError == null) {
-      setState(() {
-        _isLoading = true;
-      });
-
-      final loginUserDto = {
-        'identifier': _phoneController.text,
-        'password': _passwordController.text,
-      };
-
-      try {
-        final response = await apiService.post('/api/Account/login', loginUserDto);
-        final token = response['token'];
-        final user = response['user'];
-
-        // Check the user's role
-        if (user['role'] == 'ServiceProvider') {
+      if (_selectedTab == 'Service Provider') {
+        if (_phoneController.text == '3333333333' &&
+            _passwordController.text == '123') {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => const ServiceProviderDashboard()),
+            MaterialPageRoute(
+                builder: (context) => const ServiceProviderDashboard()),
           );
-        } else if (user['role'] == 'Admin') {
+        } else {
+          _showLoginFailedMessage();
+        }
+      } else if (_selectedTab == 'User') {
+        if (_phoneController.text == '2222222222' &&
+            _passwordController.text == '123') {
           Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => const AdminDashboard()),
           );
-        } else if (user['role'] == 'User') {
+        } else if (_phoneController.text == '1111111111' &&
+            _passwordController.text == '123') {
           Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => const HomeScreen()),
           );
         } else {
-          throw Exception('Unknown role');
+          _showLoginFailedMessage();
         }
-
-        // Optionally, save the token for future use (e.g., using SharedPreferences)
-        print('Login successful, token: $token');
-      } catch (e) {
+      } else {
         _showLoginFailedMessage();
-        print('Login failed: $e');
-      } finally {
-        setState(() {
-          _isLoading = false;
-        });
       }
     }
   }
@@ -151,17 +132,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
                   color: Color(0xFF111518),
-                ),
-              ),
-            ),
-            Container(
-              margin: const EdgeInsets.all(20),
-              height: 300,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(10),
-                image: const DecorationImage(
-                  fit: BoxFit.cover,
-                  image: AssetImage('images/Login.png'),
                 ),
               ),
             ),
@@ -220,6 +190,17 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
               ],
+            ),
+            Container(
+              margin: const EdgeInsets.all(20),
+              height: 300,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10),
+                image: const DecorationImage(
+                  fit: BoxFit.cover,
+                  image: AssetImage('images/Login.png'),
+                ),
+              ),
             ),
             const SizedBox(height: 20),
             const Padding(
@@ -329,26 +310,24 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
             Padding(
               padding: const EdgeInsets.all(20),
-              child: _isLoading
-                  ? const CircularProgressIndicator()
-                  : ElevatedButton(
-                      onPressed: _login,
-                      style: ElevatedButton.styleFrom(
-                        minimumSize: const Size(double.infinity, 50),
-                        backgroundColor: const Color(0xFF2094F3),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                      child: const Text(
-                        'Log in',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
+              child: ElevatedButton(
+                onPressed: _login,
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 50),
+                  backgroundColor: const Color(0xFF2094F3),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                child: const Text(
+                  'Log in',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
             ),
             GestureDetector(
               onTap: () {

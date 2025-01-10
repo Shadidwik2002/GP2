@@ -51,6 +51,37 @@ class _ManageAccountsPageState extends State<ManageAccountsPage> {
     }
   }
 
+  Future<void> _editUserProfile(String userId, String name, String phone) async {
+    try {
+      final response = await apiService.post(
+        '/api/AdminDashboard/users/$userId', 
+        {
+          'name': name,
+          'phoneNumber': phone,
+          'accountSettings': 'Updated', // Add relevant settings if needed
+        }
+      );
+
+      if (response != null) {
+        // Update user locally after success
+        setState(() {
+          final userIndex = _users.indexWhere((user) => user['id'] == userId);
+          if (userIndex != -1) {
+            _users[userIndex]['name'] = name;
+            _users[userIndex]['phone'] = phone;
+          }
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('User profile updated successfully!')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error updating user profile: $e')),
+      );
+    }
+  }
+
   Future<void> _toggleUserStatus(String userId, String currentStatus) async {
     try {
       if (currentStatus == 'Active') {
@@ -182,16 +213,64 @@ class _ManageAccountsPageState extends State<ManageAccountsPage> {
                           onSelected: (value) {
                             if (value == 'Toggle Status') {
                               _toggleUserStatus(user['id'], user['status']);
+                            } else if (value == 'Edit Profile') {
+                              _showEditProfileDialog(user['id'], user['name'], user['phone']);
                             }
                           },
                           itemBuilder: (context) => [
                             const PopupMenuItem(value: 'Toggle Status', child: Text('Toggle Status')),
+                            const PopupMenuItem(value: 'Edit Profile', child: Text('Edit Profile')),
                           ],
                         ),
                       ),
                     );
                   },
                 ),
+    );
+  }
+
+  void _showEditProfileDialog(String userId, String name, String phone) {
+    TextEditingController nameController = TextEditingController(text: name);
+    TextEditingController phoneController = TextEditingController(text: phone);
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Edit Profile'),
+          content: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameController,
+                decoration: const InputDecoration(labelText: 'Name'),
+              ),
+              TextField(
+                controller: phoneController,
+                decoration: const InputDecoration(labelText: 'Phone Number'),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                String newName = nameController.text;
+                String newPhone = phoneController.text;
+                _editUserProfile(userId, newName, newPhone);
+                Navigator.of(context).pop();
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
     );
   }
 }

@@ -1,19 +1,26 @@
+// Provider_List.dart
+
 import 'package:flutter/material.dart';
 import 'BookingScreen.dart';
-import 'home_screen.dart'; // Import Appointment class
-import 'api_service.dart'; // Import your API service
+import 'home_screen.dart';
+import 'api_service.dart';
 
 class ProviderList extends StatefulWidget {
   final Function(Appointment) onAppointmentBooked;
+  final int serviceId;
 
-  const ProviderList({required this.onAppointmentBooked, super.key});
+  const ProviderList({
+    required this.onAppointmentBooked,
+    required this.serviceId,
+    super.key,
+  });
 
   @override
   _ProviderListState createState() => _ProviderListState();
 }
 
 class _ProviderListState extends State<ProviderList> {
-  final ApiService apiService = ApiService(baseUrl: 'http://localhost:5196'); // Backend URL
+  final ApiService apiService = ApiService(baseUrl: 'http://localhost:5196');
   List<Map<String, dynamic>> _providers = [];
   bool isLoading = true;
 
@@ -28,14 +35,14 @@ class _ProviderListState extends State<ProviderList> {
       isLoading = true;
     });
     try {
-      final response = await apiService.get('/api/ProviderDashboard/services'); // Adjust endpoint if needed
+      final response = await apiService.get('/api/ProviderDashboard/services');
       if (response is List) {
         setState(() {
           _providers = response.map((provider) {
             return {
               'id': provider['id'],
               'name': provider['name'],
-              'role': provider['category'], // Replace with role data from the backend
+              'role': provider['category'],
               'rating': provider['averageRating'] ?? 0.0,
               'description': provider['description'],
             };
@@ -86,6 +93,7 @@ class _ProviderListState extends State<ProviderList> {
                                 providerId: provider['id'],
                                 providerName: provider['name'],
                                 role: provider['role'],
+                                serviceId: widget.serviceId,
                                 onAppointmentBooked: widget.onAppointmentBooked,
                               ),
                             ),
@@ -93,7 +101,6 @@ class _ProviderListState extends State<ProviderList> {
                         },
                         child: Row(
                           children: [
-                            // Profile Placeholder Image
                             Container(
                               margin: const EdgeInsets.all(8),
                               width: 80,
@@ -108,8 +115,6 @@ class _ProviderListState extends State<ProviderList> {
                                 color: Colors.white,
                               ),
                             ),
-
-                            // Provider Details
                             Expanded(
                               child: Padding(
                                 padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
@@ -136,8 +141,6 @@ class _ProviderListState extends State<ProviderList> {
                                 ),
                               ),
                             ),
-
-                            // Arrow Icon
                             const Padding(
                               padding: EdgeInsets.only(right: 12),
                               child: Icon(Icons.arrow_forward_ios, color: Colors.blue),
@@ -153,124 +156,23 @@ class _ProviderListState extends State<ProviderList> {
 }
 
 class ProviderDetailsPage extends StatelessWidget {
-  final int providerId; // Pass provider ID for fetching details dynamically
+  final int providerId;
   final String providerName;
   final String role;
+  final int serviceId;
   final Function(Appointment) onAppointmentBooked;
 
   const ProviderDetailsPage({
     required this.providerId,
     required this.providerName,
     required this.role,
+    required this.serviceId,
     required this.onAppointmentBooked,
     super.key,
   });
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Profile'),
-        backgroundColor: Colors.blue,
-      ),
-      body: FutureBuilder(
-        future: _fetchProviderDetails(providerId), // Fetch details dynamically
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          } else if (!snapshot.hasData) {
-            return const Center(child: Text('Provider not found'));
-          }
-
-          final provider = snapshot.data as Map<String, dynamic>;
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Profile Image and Basic Info
-                Center(
-                  child: Column(
-                    children: [
-                      const CircleAvatar(
-                        radius: 50,
-                        backgroundColor: Colors.grey,
-                        child: Icon(Icons.person, size: 50, color: Colors.white),
-                      ),
-                      const SizedBox(height: 10),
-                      Text(
-                        provider['name'] ?? providerName,
-                        style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                      ),
-                      Text(
-                        provider['role'] ?? role,
-                        style: const TextStyle(fontSize: 18, color: Colors.grey),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 20),
-
-                // About Section
-                const Text(
-                  'About',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 10),
-                Text(
-                  provider['description'] ?? 'No description available',
-                  style: const TextStyle(fontSize: 16),
-                ),
-                const SizedBox(height: 20),
-
-                // Reviews Section
-                const Text(
-                  'Reviews',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 10),
-                _buildRatingSummary(provider['averageRating']),
-                const SizedBox(height: 30),
-
-                // Book Appointment Button
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => BookingScreen(
-                            providerName: provider['name'] ?? providerName,
-                            providerId: provider['id'] ?? providerId, // Pass providerId
-                            onBooked: onAppointmentBooked,
-                          ),
-                        ),
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                    ),
-                    child: const Text(
-                      'Book Appointment',
-                      style: TextStyle(fontSize: 18, color: Colors.white),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
-      ),
-    );
-  }
-
   Future<Map<String, dynamic>> _fetchProviderDetails(int providerId) async {
-    // Replace with API call to fetch provider details
-    final apiService = ApiService(baseUrl: 'http://localhost:5196');
+final apiService = ApiService(baseUrl: 'http://localhost:5196');
     final response = await apiService.get('/api/ProviderDashboard/services/$providerId');
     return response as Map<String, dynamic>;
   }
@@ -301,5 +203,103 @@ class ProviderDetailsPage extends StatelessWidget {
       ],
     );
   }
-}
 
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Profile'),
+        backgroundColor: Colors.blue,
+      ),
+      body: FutureBuilder(
+        future: _fetchProviderDetails(providerId),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          } else if (!snapshot.hasData) {
+            return const Center(child: Text('Provider not found'));
+          }
+
+          final provider = snapshot.data as Map<String, dynamic>;
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Column(
+                    children: [
+                      const CircleAvatar(
+                        radius: 50,
+                        backgroundColor: Colors.grey,
+                        child: Icon(Icons.person, size: 50, color: Colors.white),
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        provider['name'] ?? providerName,
+                        style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                      ),
+                      Text(
+                        provider['role'] ?? role,
+                        style: const TextStyle(fontSize: 18, color: Colors.grey),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                const Text(
+                  'About',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  provider['description'] ?? 'No description available',
+                  style: const TextStyle(fontSize: 16),
+                ),
+                const SizedBox(height: 20),
+
+                const Text(
+                  'Reviews',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 10),
+                _buildRatingSummary(provider['averageRating']),
+                const SizedBox(height: 30),
+
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => BookingScreen(
+                            providerName: provider['name'] ?? providerName,
+                            providerId: providerId,
+                            serviceId: serviceId,
+                            onBooked: onAppointmentBooked,
+                          ),
+                        ),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                    ),
+                    child: const Text(
+                      'Book Appointment',
+                      style: TextStyle(fontSize: 18, color: Colors.white),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+}

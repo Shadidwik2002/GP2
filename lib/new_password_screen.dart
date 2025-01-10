@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'api_service.dart'; // Import your ApiService class
 
 class NewPasswordScreen extends StatefulWidget {
-  const NewPasswordScreen({super.key});
+  final String phoneNumber; // Accept the phone number as a parameter
+
+  const NewPasswordScreen({super.key, required this.phoneNumber});
 
   @override
   _NewPasswordScreenState createState() => _NewPasswordScreenState();
@@ -15,6 +18,34 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
   String _confirmPasswordError = '';
   bool _isPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
+
+  final ApiService apiService = ApiService(baseUrl: 'https://your-api-url.com');
+
+  Future<void> _updatePassword(String phoneNumber, String newPassword) async {
+    try {
+      final response = await apiService.post('/api/Account/forgot-password', {
+        'identifier': phoneNumber,
+        'password': newPassword,
+      });
+
+      if (response != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Password changed successfully!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        Navigator.pop(context); // Navigate back to the login screen
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to update password: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
 
   void _validatePasswordFields() {
     setState(() {
@@ -45,14 +76,9 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
         _confirmPasswordError = 'Passwords do not match.';
       }
 
-      // Show success message if no errors
+      // Call the API if no errors
       if (_passwordErrors.isEmpty && _confirmPasswordError.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Password changed successfully!'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        _updatePassword(widget.phoneNumber, password);
       }
     });
   }

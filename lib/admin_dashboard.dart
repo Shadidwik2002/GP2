@@ -50,6 +50,35 @@ class _AdminDashboardState extends State<AdminDashboard> {
     }
   }
 
+  // Function to handle editing the service
+  Future<void> _editService(int serviceId, String name, String description, String category, double price) async {
+    try {
+      // Prepare the data for the PUT request
+      final response = await apiService.put('/api/AdminDashboard/services/$serviceId', {
+        'name': name,
+        'description': description,
+        'category': category,
+        'price': price,
+        'averageRating': 0, // Example value, update as needed
+        'serviceProviderId': 123, // Replace with actual service provider ID
+      });
+
+      if (response != null) {
+        // Handle successful response
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Service updated successfully!')),
+        );
+        // Optionally, you can refresh the service list here
+        _fetchServices();
+      }
+    } catch (e) {
+      // Handle error response
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error updating service: $e')),
+      );
+    }
+  }
+
   Future<void> _deleteService(int index) async {
     final serviceId = _services[index]['id'];
     showDialog(
@@ -117,106 +146,120 @@ class _AdminDashboardState extends State<AdminDashboard> {
   int _currentIndex = 0;
 
   @override
-Widget build(BuildContext context) {
-  final List<Widget> pages = [
-    isLoading
-        ? const Center(child: CircularProgressIndicator())
-        : SingleChildScrollView(
-            scrollDirection: Axis.vertical,
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 10),
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: DataTable(
-                      columns: const [
-                        DataColumn(label: Text('ID')), // Added ID column
-                        DataColumn(label: Text('Name')),
-                        DataColumn(label: Text('Price')),
-                        DataColumn(label: Text('Description')),
-                        DataColumn(label: Text('Actions')),
-                      ],
-                      rows: _services
-                          .asMap()
-                          .entries
-                          .map(
-                            (entry) => DataRow(cells: [
-                              DataCell(Text(entry.value['id'].toString())), // ID cell
-                              DataCell(Text(entry.value['name'])),
-                              DataCell(Text(entry.value['price'])),
-                              DataCell(Text(entry.value['description'])),
-                              DataCell(Row(
-                                children: [
-                                  IconButton(
-                                    icon: const Icon(Icons.delete, color: Colors.red),
-                                    onPressed: () => _deleteService(entry.key),
-                                  ),
-                                ],
-                              )),
-                            ]),
-                          )
-                          .toList(),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  const Center(
-                    child: Text(
-                      'Add Service (Unavailable)',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.grey, // Dark grey font
-                        fontStyle: FontStyle.italic,
+  Widget build(BuildContext context) {
+    final List<Widget> pages = [
+      isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+              scrollDirection: Axis.vertical,
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 10),
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: DataTable(
+                        columns: const [
+                          DataColumn(label: Text('ID')), // Added ID column
+                          DataColumn(label: Text('Name')),
+                          DataColumn(label: Text('Price')),
+                          DataColumn(label: Text('Description')),
+                          DataColumn(label: Text('Actions')),
+                        ],
+                        rows: _services
+                            .asMap()
+                            .entries
+                            .map(
+                              (entry) => DataRow(cells: [
+                                DataCell(Text(entry.value['id'].toString())), // ID cell
+                                DataCell(Text(entry.value['name'])),
+                                DataCell(Text(entry.value['price'])),
+                                DataCell(Text(entry.value['description'])),
+                                DataCell(Row(
+                                  children: [
+                                    IconButton(
+                                      icon: const Icon(Icons.edit, color: Colors.blue),
+                                      onPressed: () {
+                                        // Call _editService method with updated data
+                                        _editService(
+                                          entry.value['id'],
+                                          'Updated Name', // Example: New name
+                                          'Updated Description', // Example: New description
+                                          'Updated Category', // Example: New category
+                                          150.0, // Example: New price
+                                        );
+                                      },
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(Icons.delete, color: Colors.red),
+                                      onPressed: () => _deleteService(entry.key),
+                                    ),
+                                  ],
+                                )),
+                              ]),
+                            )
+                            .toList(),
                       ),
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 20),
+                    const Center(
+                      child: Text(
+                        'Add Service (Unavailable)',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.grey, // Dark grey font
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-    const ManageAccountsPage(), // Manage Accounts Page
-  ];
+      const ManageAccountsPage(), // Manage Accounts Page
+    ];
 
-  return Scaffold(
-    appBar: AppBar(
-      automaticallyImplyLeading: false,
-      title: Text(_currentIndex == 0 ? 'Manage Services' : 'Manage Accounts'),
-      centerTitle: true,
-      actions: [
-        IconButton(
-          icon: const Icon(Icons.logout),
-          onPressed: () => _signOut(context),
-        ),
-      ],
-    ),
-    body: pages[_currentIndex],
-    bottomNavigationBar: BottomNavigationBar(
-      currentIndex: _currentIndex,
-      onTap: (index) {
-        setState(() {
-          _currentIndex = index;
-        });
-      },
-      items: [
-        BottomNavigationBarItem(
-          icon: Image.asset(
-            'images/manage_service.png',
-            height: 30,
-            width: 30,
+    return Scaffold(
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        title: Text(_currentIndex == 0 ? 'Manage Services' : 'Manage Accounts'),
+        centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () => _signOut(context),
           ),
-          label: 'Manage Services',
-        ),
-        BottomNavigationBarItem(
-          icon: Image.asset(
-            'images/manage_account.png',
-            height: 30,
-            width: 30,
+        ],
+      ),
+      body: pages[_currentIndex],
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _currentIndex,
+        onTap: (index) {
+          setState(() {
+            _currentIndex = index;
+          });
+        },
+        items: [
+          BottomNavigationBarItem(
+            icon: Image.asset(
+              'images/manage_service.png',
+              height: 30,
+              width: 30,
+            ),
+            label: 'Manage Services',
           ),
-          label: 'Manage Accounts',
-        ),
-      ],
-    ),
-  );
-}}
+          BottomNavigationBarItem(
+            icon: Image.asset(
+              'images/manage_account.png',
+              height: 30,
+              width: 30,
+            ),
+            label: 'Manage Accounts',
+          ),
+        ],
+      ),
+    );
+  }
+}

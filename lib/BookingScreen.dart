@@ -1,15 +1,19 @@
+// booking_screen.dart
+
 import 'package:flutter/material.dart';
-import 'home_screen.dart';
 import 'api_service.dart';
+import 'home_screen.dart';
 
 class BookingScreen extends StatefulWidget {
   final String providerName;
-  final int providerId; // Add the provider's ID for API integration
+  final int providerId;
+  final int serviceId;
   final Function(Appointment) onBooked;
 
   const BookingScreen({
     required this.providerName,
     required this.providerId,
+    required this.serviceId,
     required this.onBooked,
     super.key,
   });
@@ -19,13 +23,13 @@ class BookingScreen extends StatefulWidget {
 }
 
 class _BookingScreenState extends State<BookingScreen> {
-  final ApiService apiService = ApiService(baseUrl: 'http://localhost:5196'); // Update with your backend URL
+  final ApiService apiService = ApiService(baseUrl: 'http://localhost:5196');
   final TextEditingController _issueController = TextEditingController();
   final TextEditingController _dateController = TextEditingController();
   final TextEditingController _timeController = TextEditingController();
 
-  String _selectedUrgency = "Normal"; // Default urgency level
-  final List<String> _urgencyLevels = ["Low", "Normal", "High"]; // Urgency levels as strings
+  String _selectedUrgency = "Normal";
+  final List<String> _urgencyLevels = ["Low", "Normal", "High"];
 
   Future<void> _selectDate() async {
     DateTime? pickedDate = await showDatePicker(
@@ -69,12 +73,12 @@ class _BookingScreenState extends State<BookingScreen> {
         _timeController.text.isNotEmpty) {
       try {
         final response = await apiService.post('/api/Booking', {
-          "serviceId": 1, // Replace with the actual service ID
+          "serviceId": widget.serviceId,
           "serviceProviderId": widget.providerId,
-          "userId": 123, // Replace with the actual user ID
+          "userId": 123, // Replace with actual user ID
           "appointmentDate": "${_dateController.text} ${_timeController.text}",
           "issueDescription": _issueController.text,
-          "urgencyLevel": _selectedUrgency, // Pass the urgency level as a string
+          "urgencyLevel": _selectedUrgency,
         });
 
         if (response != null) {

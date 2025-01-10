@@ -1,21 +1,20 @@
 import 'package:flutter/material.dart';
+import 'api_service.dart'; // Import your ApiService class
 
 class ChangePasswordScreen extends StatefulWidget {
-  const ChangePasswordScreen({super.key});
+  final String phoneNumber; // Accept phone number as an argument
+
+  const ChangePasswordScreen({super.key, required this.phoneNumber});
 
   @override
   _ChangePasswordScreenState createState() => _ChangePasswordScreenState();
 }
 
 class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
-  final TextEditingController _currentPasswordController = TextEditingController();
   final TextEditingController _newPasswordController = TextEditingController();
   final TextEditingController _confirmPasswordController = TextEditingController();
 
-  String? _currentPasswordError;
   String? _confirmPasswordError;
-
-  final String originalPassword = 'Hadi1999@';
 
   bool hasMinLength = false;
   bool hasUppercase = false;
@@ -26,42 +25,66 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   bool _isNewPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
 
+  final ApiService apiService = ApiService(baseUrl: 'https://your-api-url.com'); // Initialize your API service
+
   void _validateNewPassword(String password) {
     setState(() {
       hasMinLength = password.length >= 8;
       hasUppercase = RegExp(r'[A-Z]').hasMatch(password);
       hasLowercase = RegExp(r'[a-z]').hasMatch(password);
       hasNumber = RegExp(r'[0-9]').hasMatch(password);
-      hasSpecialChar = RegExp(r'[!@#\\$&*~]').hasMatch(password);
+      hasSpecialChar = RegExp(r'[!@#\$&*~]').hasMatch(password);
     });
   }
 
-  void _validateAndSubmit() {
-    setState(() {
-      _currentPasswordError = null;
-      _confirmPasswordError = null;
+  Future<void> _resetPassword() async {
+    try {
+      final response = await apiService.post('/api/Account/reset-password', {
+        'identifier': widget.phoneNumber, // Use the phone number dynamically
+        'newPassword': _newPasswordController.text,
+      });
 
-      if (_currentPasswordController.text != originalPassword) {
-        _currentPasswordError = "Current password doesn't match the original password.";
-      }
-
-      if (_confirmPasswordController.text != _newPasswordController.text) {
-        _confirmPasswordError = 'Confirm password must match the new password.';
-      }
-
-      if (_currentPasswordError == null &&
-          _confirmPasswordError == null &&
-          hasMinLength &&
-          hasUppercase &&
-          hasLowercase &&
-          hasNumber &&
-          hasSpecialChar) {
+      if (response != null) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Password updated successfully!'),
             backgroundColor: Colors.green,
           ),
         );
+        Navigator.pop(context); // Navigate back on success
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to update password. Please try again.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  void _validateAndSubmit() {
+    setState(() {
+      _confirmPasswordError = null;
+
+      if (_confirmPasswordController.text != _newPasswordController.text) {
+        _confirmPasswordError = 'Confirm password must match the new password.';
+      }
+
+      if (_confirmPasswordError == null &&
+          hasMinLength &&
+          hasUppercase &&
+          hasLowercase &&
+          hasNumber &&
+          hasSpecialChar) {
+        _resetPassword();
       }
     });
   }
@@ -103,24 +126,6 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 10),
-
-            // Current Password Field
-            const Text(
-              'Current Password',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-            ),
-            const SizedBox(height: 5),
-            TextField(
-              controller: _currentPasswordController,
-              obscureText: true,
-              decoration: InputDecoration(
-                hintText: 'Enter current password',
-                errorText: _currentPasswordError,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                prefixIcon: const Icon(Icons.lock_outline, color: Colors.blue),
-              ),
-            ),
-            const SizedBox(height: 20),
 
             // New Password Field
             const Text(
@@ -198,7 +203,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                 icon: const Icon(Icons.save, color: Colors.white),
                 label: const Text(
                   'Update Password',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold,color: Colors.white),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blue,

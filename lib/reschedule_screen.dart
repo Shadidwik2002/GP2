@@ -16,7 +16,6 @@ class _RescheduleScreenState extends State<RescheduleScreen> {
   final TextEditingController _dateController = TextEditingController();
   String? _selectedTimeSlot;
 
-  // Generate time slots from 9 AM to 5 PM with 1-hour intervals
   List<String> _availableTimeSlots = [];
 
   @override
@@ -53,10 +52,10 @@ class _RescheduleScreenState extends State<RescheduleScreen> {
     if (_dateController.text.isNotEmpty && _selectedTimeSlot != null) {
       String newAppointmentDate = "${_dateController.text} ${_selectedTimeSlot}:00";
 
-      // Prepare data to send to API
       try {
+        // Send the bookingId and new date/time to the API
         final response = await apiService.post('/api/UserDashboard/reschedule', {
-          'bookingId': widget.appointment.providerName,  // Example of using the appointment, replace with bookingId
+          'bookingId': widget.appointment.id, // Use the bookingId from the appointment
           'newAppointmentDate': newAppointmentDate,
         });
 

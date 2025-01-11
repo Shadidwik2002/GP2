@@ -1,18 +1,19 @@
-// home_screen.dart
-
 import 'package:flutter/material.dart';
 import 'api_service.dart';
 import 'account_page.dart';
 import 'Provider_List.dart';
 import 'reschedule_screen.dart';
+import 'user_data.dart'; // Import UserData singleton
 
 class Appointment {
+  String id;
   String providerName;
   String issueDescription;
   String date;
   String time;
 
   Appointment({
+    required this.id,
     required this.providerName,
     required this.issueDescription,
     required this.date,
@@ -76,15 +77,25 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       isLoading = true;
     });
+
+    final userId = UserData().id; // Get the userId from UserData
+    if (userId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error: User ID not available.')),
+      );
+      return;
+    }
+
     try {
-      final response = await apiService.get('/api/UserDashboard/appointments');
+      final response = await apiService.get('/api/UserDashboard/appointments?userId=$userId');
       if (response is List) {
         setState(() {
           _appointments.clear();
           for (var item in response) {
             _appointments.add(Appointment(
-              providerName: item['providerName'] ?? 'Unknown Provider',
-              issueDescription: item['issueDescription'] ?? 'No description',
+              id: item['id'].toString(),
+              providerName: item['serviceProviderName'] ?? 'Unknown Provider',
+              issueDescription: item['serviceName'] ?? 'No description',
               date: item['appointmentDate']?.split('T')?.first ?? 'N/A',
               time: item['appointmentDate']?.split('T')?.last ?? 'N/A',
             ));
@@ -136,88 +147,82 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
- void _cancelAppointment(Appointment appointment, int bookingId) async {
-  try {
-    // Show loading indicator
-    setState(() {
-      isLoading = true;
-    });
-
-    // Make the API call
-    final response = await apiService.post('/api/Booking/cancel', {
-      "bookingId": bookingId, // Send the booking ID
-    });
-
-    if (response != null) {
+  Future<void> _cancelAppointment(Appointment appointment) async {
+    try {
       setState(() {
-        _appointments.remove(appointment); // Remove the appointment from the list
+        isLoading = true;
       });
 
+      final response = await apiService.post('/api/Booking/cancel', {
+        "bookingId": appointment.id, // Send the booking ID
+      });
+
+      if (response != null) {
+        setState(() {
+          _appointments.remove(appointment); // Remove the appointment from the list
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Appointment canceled successfully.')),
+        );
+      }
+    } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Appointment canceled successfully.')),
+        SnackBar(content: Text('Failed to cancel appointment: $e')),
       );
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
     }
-  } catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Failed to cancel appointment: $e')),
-    );
-  } finally {
-    // Hide loading indicator
-    setState(() {
-      isLoading = false;
-    });
   }
-}
 
-
- Widget _buildSchedulePage() {
-  return isLoading
-      ? const Center(child: CircularProgressIndicator())
-      : _appointments.isEmpty
-          ? const Center(child: Text('No appointments scheduled yet.'))
-          : ListView.builder(
-              itemCount: _appointments.length,
-              itemBuilder: (context, index) {
-                final appointment = _appointments[index];
-                final bookingId = 123; // Replace with actual bookingId from your data
-                return Card(
-                  margin: const EdgeInsets.all(10),
-                  child: Padding(
-                    padding: const EdgeInsets.all(10),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        ListTile(
-                          title: Text(appointment.providerName),
-                          subtitle: Text(
-                            'Issue: ${appointment.issueDescription}\nDate: ${appointment.date} at ${appointment.time}',
+  Widget _buildSchedulePage() {
+    return isLoading
+        ? const Center(child: CircularProgressIndicator())
+        : _appointments.isEmpty
+            ? const Center(child: Text('No appointments scheduled yet.'))
+            : ListView.builder(
+                itemCount: _appointments.length,
+                itemBuilder: (context, index) {
+                  final appointment = _appointments[index];
+                  return Card(
+                    margin: const EdgeInsets.all(10),
+                    child: Padding(
+                      padding: const EdgeInsets.all(10),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          ListTile(
+                            title: Text(appointment.providerName),
+                            subtitle: Text(
+                              'Issue: ${appointment.issueDescription}\nDate: ${appointment.date} at ${appointment.time}',
+                            ),
+                            leading: const Icon(Icons.event, color: Colors.blue),
                           ),
-                          leading: const Icon(Icons.event, color: Colors.blue),
-                        ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            TextButton(
-                              onPressed: () => _rescheduleAppointment(appointment),
-                              child: const Text('Reschedule'),
-                            ),
-                            TextButton(
-                              onPressed: () => _cancelAppointment(appointment, bookingId),
-                              child: const Text(
-                                'Cancel',
-                                style: TextStyle(color: Colors.red),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              TextButton(
+                                onPressed: () => _rescheduleAppointment(appointment),
+                                child: const Text('Reschedule'),
                               ),
-                            ),
-                          ],
-                        ),
-                      ],
+                              TextButton(
+                                onPressed: () => _cancelAppointment(appointment),
+                                child: const Text(
+                                  'Cancel',
+                                  style: TextStyle(color: Colors.red),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                );
-              },
-            );
-}
-
+                  );
+                },
+              );
+  }
 
   Widget _buildServiceCard(String title, String price, String imagePath, BuildContext context, int serviceId) {
     return GestureDetector(
@@ -308,7 +313,6 @@ class _HomeScreenState extends State<HomeScreen> {
       body: IndexedStack(
         index: _currentIndex,
         children: [
-          // Services Page
           isLoading
               ? const Center(child: CircularProgressIndicator())
               : filteredServices.isEmpty
@@ -327,11 +331,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         );
                       },
                     ),
-
-          // Schedule Page
           _buildSchedulePage(),
-
-          // Account Page
           AccountPage(appointments: _allAppointments),
         ],
       ),

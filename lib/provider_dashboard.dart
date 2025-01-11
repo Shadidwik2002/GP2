@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'provider_profile.dart';
 import 'provider_schedule.dart';
 import 'api_service.dart'; // Import your ApiService class
+import 'user_data.dart'; // Import the UserData singleton
 
 class ServiceProviderDashboard extends StatefulWidget {
   const ServiceProviderDashboard({super.key});
@@ -28,8 +29,15 @@ class _ServiceProviderDashboardState extends State<ServiceProviderDashboard> {
   }
 
   Future<void> _fetchServiceRequests() async {
+    final providerId = UserData().id; // Use providerId from UserData
+    if (providerId == null) {
+      print('Error: Provider ID is null.');
+      return;
+    }
+
     try {
-      final response = await apiService.get('/api/ProviderDashboard/bookings?providerId=123'); // Use actual providerId
+      final response = await apiService.get(
+          '/api/ProviderDashboard/bookings?providerId=$providerId'); // Use providerId
       if (response != null && response is List) {
         setState(() {
           requests = List<Map<String, String>>.from(response.map((item) {
@@ -45,7 +53,6 @@ class _ServiceProviderDashboardState extends State<ServiceProviderDashboard> {
           }));
         });
       } else {
-        // Handle empty or incorrect response
         print('Error: No service requests found.');
       }
     } catch (e) {
@@ -54,8 +61,15 @@ class _ServiceProviderDashboardState extends State<ServiceProviderDashboard> {
   }
 
   Future<void> _fetchProviderData() async {
+    final providerId = UserData().id; // Use providerId from UserData
+    if (providerId == null) {
+      print('Error: Provider ID is null.');
+      return;
+    }
+
     try {
-      final response = await apiService.get('/api/ProviderDashboard/profile?providerId=123'); // Use actual providerId
+      final response = await apiService.get(
+          '/api/ProviderDashboard/profile?providerId=$providerId'); // Use providerId
       if (response != null) {
         setState(() {
           providerStatus = response['status'] ?? 'Available'; // Set provider status from API
@@ -68,87 +82,6 @@ class _ServiceProviderDashboardState extends State<ServiceProviderDashboard> {
     }
   }
 
-  // Accept request logic
-  Future<void> _acceptRequest(String bookingId) async {
-    try {
-      final response = await apiService.post('/api/ProviderDashboard/accept', {
-        'bookingId': bookingId,
-        'status': 'Accepted',
-      });
-
-      if (response != null) {
-        // Update request status locally after success
-        setState(() {
-          final request = requests.firstWhere((req) => req['id'] == bookingId);
-          request['status'] = 'Accepted';
-          acceptedRequests.add(request);
-          requests.removeWhere((req) => req['id'] == bookingId);
-        });
-        print('Request Accepted');
-      }
-    } catch (e) {
-      print('Error accepting request: $e');
-    }
-  }
-
-  // Decline request logic
-  Future<void> _declineRequest(String bookingId) async {
-    try {
-      final response = await apiService.post('/api/ProviderDashboard/decline', {
-        'bookingId': bookingId,
-        'status': 'Declined',
-      });
-
-      if (response != null) {
-        // Update request status locally after success
-        setState(() {
-          final request = requests.firstWhere((req) => req['id'] == bookingId);
-          request['status'] = 'Declined';
-          requests.removeWhere((req) => req['id'] == bookingId);
-        });
-        print('Request Declined');
-      }
-    } catch (e) {
-      print('Error declining request: $e');
-    }
-  }
-
-  void handleRequestConfirmation(String id, bool accepted) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          backgroundColor: Colors.white,
-          title: Text(accepted ? 'Accept Request' : 'Decline Request'),
-          content: Text(
-            accepted
-                ? 'Are you sure you want to accept this request?'
-                : 'Are you sure you want to decline this request?',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                if (accepted) {
-                  _acceptRequest(id); // Trigger API call for accept
-                } else {
-                  _declineRequest(id); // Trigger API call for decline
-                }
-              },
-              child: const Text('Confirm'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
   void toggleStatus() {
     setState(() {
       providerStatus = providerStatus == 'Available' ? 'Busy' : 'Available';
@@ -157,11 +90,17 @@ class _ServiceProviderDashboardState extends State<ServiceProviderDashboard> {
   }
 
   Future<void> updateProviderStatus(String status) async {
+    final providerId = UserData().id; // Use providerId from UserData
+    if (providerId == null) {
+      print('Error: Provider ID is null.');
+      return;
+    }
+
     try {
       final response = await apiService.post(
         '/api/ProviderDashboard/status',
         {
-          'providerId': '123', // Use actual provider ID
+          'providerId': providerId, // Use providerId
           'status': status,
         },
       );
@@ -212,26 +151,6 @@ class _ServiceProviderDashboardState extends State<ServiceProviderDashboard> {
                           Text('Time: ${request['time']}'),
                           const SizedBox(height: 5),
                           Text('Location: ${request['location']}'),
-                          const SizedBox(height: 15),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              ElevatedButton(
-                                onPressed: () => handleRequestConfirmation(request['id']!, true),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.green,
-                                ),
-                                child: const Text('Accept'),
-                              ),
-                              ElevatedButton(
-                                onPressed: () => handleRequestConfirmation(request['id']!, false),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.red,
-                                ),
-                                child: const Text('Decline'),
-                              ),
-                            ],
-                          ),
                         ],
                       ),
                     ),
@@ -239,8 +158,8 @@ class _ServiceProviderDashboardState extends State<ServiceProviderDashboard> {
                 },
               ),
       ),
-      ProviderSchedulePage(acceptedRequests: acceptedRequests),
-      ProviderProfilePage(serviceHistory: serviceHistory),
+      ProviderSchedulePage(), // Pass only relevant data
+      ProviderProfilePage(serviceHistory: serviceHistory), // Pass only relevant data
     ];
 
     final List<String> titles = ['Dashboard', 'Schedule', 'Profile'];
@@ -273,10 +192,7 @@ class _ServiceProviderDashboardState extends State<ServiceProviderDashboard> {
               ]
             : null,
       ),
-      body: Container(
-        color: Colors.white,
-        child: pages[_currentIndex],
-      ),
+      body: pages[_currentIndex],
       bottomNavigationBar: Container(
         color: Colors.white,
         child: BottomNavigationBar(

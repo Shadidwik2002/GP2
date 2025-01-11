@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'provider_dashboard.dart';
 import 'home_screen.dart';
 import 'forgot_password_screen.dart';
 import 'account_type.dart';
 import 'admin_dashboard.dart';
+import 'user_data.dart'; // Import the UserData singleton
 
 void main() {
   runApp(const MyApp());
@@ -32,11 +35,11 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-
   bool _isPasswordVisible = false;
+  bool _isLoading = false;
   String? _phoneError;
   String? _passwordError;
-  String _selectedTab = 'User'; // Default tab
+  String _selectedTab = 'User';
 
   @override
   void dispose() {
@@ -62,49 +65,84 @@ class _LoginScreenState extends State<LoginScreen> {
     });
   }
 
-  void _login() {
+  Future<void> _login() async {
     _validateFields();
 
     if (_phoneError == null && _passwordError == null) {
-      if (_selectedTab == 'Service Provider') {
-        if (_phoneController.text == '3333333333' &&
-            _passwordController.text == '123') {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-                builder: (context) => const ServiceProviderDashboard()),
+      setState(() {
+        _isLoading = true;
+      });
+
+      try {
+        final response = await http.post(
+          Uri.parse('api/Account/login'), // Replace with your API endpoint
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: jsonEncode({
+            'phoneNumber': _phoneController.text,
+            'password': _passwordController.text,
+            'userType': _selectedTab == 'User' ? 'U' : 'P'
+          }),
+        );
+
+        if (response.statusCode == 200) {
+          final responseData = jsonDecode(response.body);
+
+          // Save user data globally
+          UserData().saveUserData({
+            'token': responseData['token'],
+            'phoneNumber': _phoneController.text,
+            'userType': responseData['userType'],
+            'isAdmin': responseData['isAdmin'] ?? false,
+          });
+
+          // Navigate based on user type
+          if (responseData['userType'] == 'U') {
+            if (responseData['isAdmin'] == true) {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => const AdminDashboard()),
+              );
+            } else {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => const HomeScreen()),
+              );
+            }
+          } else if (responseData['userType'] == 'P') {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => const ServiceProviderDashboard()),
+            );
+          }
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Response: ${responseData['userType']}'),
+              duration: const Duration(seconds: 2),
+            ),
           );
         } else {
-          _showLoginFailedMessage();
+          _showLoginFailedMessage('Invalid credentials or server error');
         }
-      } else if (_selectedTab == 'User') {
-        if (_phoneController.text == '2222222222' &&
-            _passwordController.text == '123') {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const AdminDashboard()),
-          );
-        } else if (_phoneController.text == '1111111111' &&
-            _passwordController.text == '123') {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const HomeScreen()),
-          );
-        } else {
-          _showLoginFailedMessage();
-        }
-      } else {
-        _showLoginFailedMessage();
+      } catch (e) {
+        _showLoginFailedMessage('Connection error. Please try again.');
+      } finally {
+        setState(() {
+          _isLoading = false;
+        });
       }
     }
   }
 
-  void _showLoginFailedMessage() {
+  void _showLoginFailedMessage(String message) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Login Failed'),
-        content: const Text('Invalid phone number or password.'),
+        content: Text(message),
         actions: [
           TextButton(
             onPressed: () {
@@ -145,8 +183,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     });
                   },
                   child: Container(
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 8, horizontal: 16),
+                    padding:
+                        const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
                     decoration: BoxDecoration(
                       color: _selectedTab == 'User'
                           ? const Color(0xFF2094F3)
@@ -171,8 +209,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     });
                   },
                   child: Container(
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 8, horizontal: 16),
+                    padding:
+                        const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
                     decoration: BoxDecoration(
                       color: _selectedTab == 'Service Provider'
                           ? const Color(0xFF2094F3)
@@ -311,7 +349,7 @@ class _LoginScreenState extends State<LoginScreen> {
             Padding(
               padding: const EdgeInsets.all(20),
               child: ElevatedButton(
-                onPressed: _login,
+                onPressed: _isLoading ? null : _login,
                 style: ElevatedButton.styleFrom(
                   minimumSize: const Size(double.infinity, 50),
                   backgroundColor: const Color(0xFF2094F3),
@@ -319,14 +357,16 @@ class _LoginScreenState extends State<LoginScreen> {
                     borderRadius: BorderRadius.circular(10),
                   ),
                 ),
-                child: const Text(
-                  'Log in',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
+                child: _isLoading
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : const Text(
+                        'Log in',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
               ),
             ),
             GestureDetector(

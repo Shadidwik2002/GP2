@@ -1,8 +1,7 @@
-// booking_screen.dart
-
 import 'package:flutter/material.dart';
 import 'api_service.dart';
 import 'home_screen.dart';
+import 'user_data.dart';
 
 class BookingScreen extends StatefulWidget {
   final String providerName;
@@ -72,18 +71,27 @@ class _BookingScreenState extends State<BookingScreen> {
         _dateController.text.isNotEmpty &&
         _timeController.text.isNotEmpty) {
       try {
+        final userId = UserData().id; // Use the userId from UserData
+        if (userId == null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Error: User ID not available.')),
+          );
+          return;
+        }
+
         final response = await apiService.post('/api/Booking', {
           "serviceId": widget.serviceId,
           "serviceProviderId": widget.providerId,
-          "userId": 123, // Replace with actual user ID
+          "userId": userId,
           "appointmentDate": "${_dateController.text} ${_timeController.text}",
           "issueDescription": _issueController.text,
           "urgencyLevel": _selectedUrgency,
         });
 
-        if (response != null) {
+        if (response != null && response.containsKey('id')) {
           widget.onBooked(
             Appointment(
+              id: response['id'].toString(), // Use the returned booking ID
               providerName: widget.providerName,
               issueDescription: _issueController.text,
               date: _dateController.text,
@@ -140,7 +148,8 @@ class _BookingScreenState extends State<BookingScreen> {
               decoration: InputDecoration(
                 labelText: 'Describe the Issue',
                 hintText: 'E.g., Leaky faucet, broken AC, etc.',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                border:
+                    OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 prefixIcon: const Icon(Icons.description, color: Colors.blue),
               ),
             ),
@@ -152,8 +161,10 @@ class _BookingScreenState extends State<BookingScreen> {
               decoration: InputDecoration(
                 labelText: 'Select Date',
                 hintText: 'Choose a date for your appointment',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                prefixIcon: const Icon(Icons.calendar_today, color: Colors.blue),
+                border:
+                    OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                prefixIcon:
+                    const Icon(Icons.calendar_today, color: Colors.blue),
               ),
             ),
             const SizedBox(height: 20),
@@ -164,7 +175,8 @@ class _BookingScreenState extends State<BookingScreen> {
               decoration: InputDecoration(
                 labelText: 'Select Time',
                 hintText: 'Choose a time for your appointment',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                border:
+                    OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 prefixIcon: const Icon(Icons.access_time, color: Colors.blue),
               ),
             ),
@@ -184,7 +196,8 @@ class _BookingScreenState extends State<BookingScreen> {
               },
               decoration: InputDecoration(
                 labelText: 'Select Urgency Level',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                border:
+                    OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 prefixIcon: const Icon(Icons.priority_high, color: Colors.blue),
               ),
             ),

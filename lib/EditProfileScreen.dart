@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'verification_change_number.dart'; // Import your updated screen
-import 'Change_password.dart';
+import 'Change_password.dart'; // Import the ChangePasswordScreen
+import 'user_data.dart'; // Import UserData singleton
 
 class EditProfileScreen extends StatefulWidget {
-  final String phoneNumber; // Accept phone number as an argument
-
-  const EditProfileScreen({super.key, required this.phoneNumber});
+  const EditProfileScreen({super.key});
 
   @override
   _EditProfileScreenState createState() => _EditProfileScreenState();
@@ -23,7 +22,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   @override
   void initState() {
     super.initState();
-    _phoneNumberController = TextEditingController(text: widget.phoneNumber); // Initialize with phone number
+    _phoneNumberController =
+        TextEditingController(text: UserData().phoneNumber); // Initialize with phone number from UserData
   }
 
   @override
@@ -256,7 +256,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => ChangePasswordScreen(phoneNumber: _phoneNumberController.text),
+              builder: (context) => const ChangePasswordScreen(), // No parameter passed
             ),
           );
         },

@@ -1,5 +1,3 @@
-// Provider_List.dart
-
 import 'package:flutter/material.dart';
 import 'BookingScreen.dart';
 import 'home_screen.dart';
@@ -7,7 +5,7 @@ import 'api_service.dart';
 
 class ProviderList extends StatefulWidget {
   final Function(Appointment) onAppointmentBooked;
-  final int serviceId;
+  final int serviceId; // Service ID passed from the previous page
 
   const ProviderList({
     required this.onAppointmentBooked,
@@ -35,16 +33,19 @@ class _ProviderListState extends State<ProviderList> {
       isLoading = true;
     });
     try {
-      final response = await apiService.get('/api/ProviderDashboard/services');
+      // Fetch providers using the serviceId
+      final response = await apiService.get('/api/Service/${widget.serviceId}/providers');
       if (response is List) {
         setState(() {
           _providers = response.map((provider) {
             return {
               'id': provider['id'],
-              'name': provider['name'],
-              'role': provider['category'],
+              'name': provider['name'], // Only store the name for display here
+              // Store all details to pass to the next screen
+              'role': provider['aboutMe'],
               'rating': provider['averageRating'] ?? 0.0,
-              'description': provider['description'],
+              'availability': provider['availabilityStatus'],
+              'description': provider['aboutMe'], // Assuming aboutMe acts as description
             };
           }).toList();
         });
@@ -90,62 +91,22 @@ class _ProviderListState extends State<ProviderList> {
                             context,
                             MaterialPageRoute(
                               builder: (context) => ProviderDetailsPage(
-                                providerId: provider['id'],
-                                providerName: provider['name'],
-                                role: provider['role'],
+                                providerDetails: provider, // Pass the full details to the next screen
                                 serviceId: widget.serviceId,
                                 onAppointmentBooked: widget.onAppointmentBooked,
                               ),
                             ),
                           );
                         },
-                        child: Row(
-                          children: [
-                            Container(
-                              margin: const EdgeInsets.all(8),
-                              width: 80,
-                              height: 80,
-                              decoration: BoxDecoration(
-                                color: Colors.blue[100],
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: const Icon(
-                                Icons.person,
-                                size: 40,
-                                color: Colors.white,
-                              ),
+                        child: ListTile(
+                          title: Text(
+                            provider['name'], // Only display the provider's name here
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
                             ),
-                            Expanded(
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      provider['name'] ?? 'Unknown',
-                                      style: const TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.black87,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      provider['role'] ?? '',
-                                      style: const TextStyle(
-                                        fontSize: 14,
-                                        color: Colors.grey,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                            const Padding(
-                              padding: EdgeInsets.only(right: 12),
-                              child: Icon(Icons.arrow_forward_ios, color: Colors.blue),
-                            ),
-                          ],
+                          ),
+                          trailing: const Icon(Icons.arrow_forward_ios, color: Colors.blue),
                         ),
                       ),
                     );
@@ -156,149 +117,116 @@ class _ProviderListState extends State<ProviderList> {
 }
 
 class ProviderDetailsPage extends StatelessWidget {
-  final int providerId;
-  final String providerName;
-  final String role;
+  final Map<String, dynamic> providerDetails; // Receive all details as a map
   final int serviceId;
   final Function(Appointment) onAppointmentBooked;
 
   const ProviderDetailsPage({
-    required this.providerId,
-    required this.providerName,
-    required this.role,
+    required this.providerDetails,
     required this.serviceId,
     required this.onAppointmentBooked,
     super.key,
   });
 
-  Future<Map<String, dynamic>> _fetchProviderDetails(int providerId) async {
-final apiService = ApiService(baseUrl: 'http://localhost:5196');
-    final response = await apiService.get('/api/ProviderDashboard/services/$providerId');
-    return response as Map<String, dynamic>;
-  }
-
-  Widget _buildRatingSummary(double? averageRating) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          (averageRating ?? 0).toStringAsFixed(1),
-          style: const TextStyle(fontSize: 36, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 10),
-        Row(
-          children: [
-            ...List.generate(
-              5,
-              (index) => Icon(
-                index < (averageRating ?? 0) ? Icons.star : Icons.star_border,
-                color: Colors.yellow[700],
-                size: 20,
-              ),
-            ),
-            const SizedBox(width: 10),
-            Text('(${(averageRating ?? 0).toStringAsFixed(1)} rating)'),
-          ],
-        ),
-      ],
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Profile'),
+        title: const Text('Provider Details'),
         backgroundColor: Colors.blue,
       ),
-      body: FutureBuilder(
-        future: _fetchProviderDetails(providerId),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          } else if (!snapshot.hasData) {
-            return const Center(child: Text('Provider not found'));
-          }
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Provider profile picture and name
+            Center(
+              child: Column(
+                children: [
+                  const CircleAvatar(
+                    radius: 50,
+                    backgroundColor: Colors.grey,
+                    child: Icon(Icons.person, size: 50, color: Colors.white),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    providerDetails['name'] ?? 'Unknown',
+                    style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                  ),
+                  Text(
+                    providerDetails['role'] ?? 'No role specified',
+                    style: const TextStyle(fontSize: 18, color: Colors.grey),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
 
-          final provider = snapshot.data as Map<String, dynamic>;
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            // About section
+            const Text(
+              'About',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              providerDetails['description'] ?? 'No description available',
+              style: const TextStyle(fontSize: 16),
+            ),
+            const SizedBox(height: 20),
+
+            // Rating
+            const Text(
+              'Rating',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 10),
+            Row(
               children: [
-                Center(
-                  child: Column(
-                    children: [
-                      const CircleAvatar(
-                        radius: 50,
-                        backgroundColor: Colors.grey,
-                        child: Icon(Icons.person, size: 50, color: Colors.white),
-                      ),
-                      const SizedBox(height: 10),
-                      Text(
-                        provider['name'] ?? providerName,
-                        style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                      ),
-                      Text(
-                        provider['role'] ?? role,
-                        style: const TextStyle(fontSize: 18, color: Colors.grey),
-                      ),
-                    ],
+                ...List.generate(
+                  5,
+                  (index) => Icon(
+                    index < (providerDetails['rating'] ?? 0).toInt()
+                        ? Icons.star
+                        : Icons.star_border,
+                    color: Colors.yellow[700],
                   ),
                 ),
-                const SizedBox(height: 20),
-
-                const Text(
-                  'About',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 10),
-                Text(
-                  provider['description'] ?? 'No description available',
-                  style: const TextStyle(fontSize: 16),
-                ),
-                const SizedBox(height: 20),
-
-                const Text(
-                  'Reviews',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 10),
-                _buildRatingSummary(provider['averageRating']),
-                const SizedBox(height: 30),
-
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => BookingScreen(
-                            providerName: provider['name'] ?? providerName,
-                            providerId: providerId,
-                            serviceId: serviceId,
-                            onBooked: onAppointmentBooked,
-                          ),
-                        ),
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                    ),
-                    child: const Text(
-                      'Book Appointment',
-                      style: TextStyle(fontSize: 18, color: Colors.white),
-                    ),
-                  ),
-                ),
+                const SizedBox(width: 10),
+                Text('(${providerDetails['rating']?.toStringAsFixed(1) ?? '0.0'} rating)'),
               ],
             ),
-          );
-        },
+            const SizedBox(height: 30),
+
+            // Book appointment button
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => BookingScreen(
+                        providerName: providerDetails['name'] ?? 'Unknown',
+                        providerId: providerDetails['id'],
+                        serviceId: serviceId,
+                        onBooked: onAppointmentBooked,
+                      ),
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                ),
+                child: const Text(
+                  'Book Appointment',
+                  style: TextStyle(fontSize: 18, color: Colors.white),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'api_service.dart'; // Import your API service
+import 'user_data.dart'; // Import the UserData singleton
 
 class ProviderHistoryPage extends StatefulWidget {
-  const ProviderHistoryPage({super.key, required List<Map<String, String>> serviceHistory});
+  const ProviderHistoryPage({super.key});
 
   @override
   _ProviderHistoryPageState createState() => _ProviderHistoryPageState();
@@ -20,23 +21,37 @@ class _ProviderHistoryPageState extends State<ProviderHistoryPage> {
   }
 
   Future<void> _fetchServiceHistory() async {
+    final providerId = UserData().id; // Fetch providerId from UserData
+    if (providerId == null) {
+      print('Error: Provider ID is null.');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error: Provider ID not available.')),
+      );
+      return;
+    }
+
     try {
-      final response = await apiService.get('/api/ProviderDashboard/bookings?providerId=123'); // Replace with actual providerId
-      if (response != null && response is List) {
+      final response = await apiService.get('/api/bookings?providerId=$providerId'); // Use providerId dynamically
+      if (response != null && response is Map<String, dynamic>) {
+        // Flatten the dictionary into a single list of bookings
+        final allBookings = response.values.expand((bookings) => bookings).toList();
+
+        // Filter for Completed bookings (or other statuses if needed)
+        final completedBookings = allBookings.where((booking) => booking['status'] == 'Completed').toList();
+
         setState(() {
-          serviceHistory = List<Map<String, String>>.from(response.map((item) {
+          serviceHistory = List<Map<String, String>>.from(completedBookings.map((item) {
             return {
               'id': item['id'].toString(),
-              'service': item['service'],
-              'customerName': item['customerName'],
-              'details': item['details'],
-              'time': item['time'],
-              'location': item['location'],
+              'service': 'Service ${item['serviceId']}', // Map serviceId to a service name
+              'customerName': 'User ${item['userId']}', // Map userId to a customer name
+              'details': item['issueDescription'] ?? 'No details',
+              'time': item['appointmentDate'] ?? 'No time',
+              'location': 'Location not available', // Add location if available in the API
               'status': item['status'] ?? 'Pending',
-              'cost': item['cost'] ?? '0', // Assuming 'cost' is available in response
+              'cost': '0', // Add cost if available in the API
             };
-          }).where((item) =>
-              item['status'] == 'Accepted' || item['status'] == 'Declined')); // Filter for Accepted and Declined requests
+          }));
         });
       } else {
         print('Error: No service history found.');
@@ -53,15 +68,15 @@ class _ProviderHistoryPageState extends State<ProviderHistoryPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white, // Set the background color to white
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text(
           'Service History',
-          style: TextStyle(color: Colors.black), // Set text color to black
+          style: TextStyle(color: Colors.black),
         ),
-        backgroundColor: Colors.white, // Set AppBar background color to white
-        elevation: 0, // Remove shadow
-        iconTheme: const IconThemeData(color: Colors.black), // Set back button color to black
+        backgroundColor: Colors.white,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.black),
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -69,18 +84,17 @@ class _ProviderHistoryPageState extends State<ProviderHistoryPage> {
               ? const Center(
                   child: Text(
                     'No history available',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black), // Set text color to black
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black),
                   ),
                 )
               : ListView.builder(
                   itemCount: serviceHistory.length,
                   itemBuilder: (context, index) {
                     final service = serviceHistory[index];
-                    final statusColor =
-                        service['status'] == 'Accepted' ? Colors.green : Colors.red;
+                    final statusColor = service['status'] == 'Completed' ? Colors.green : Colors.red;
 
                     return Card(
-                      color: Colors.white, // Set Card background color to white
+                      color: Colors.white,
                       margin: const EdgeInsets.all(10),
                       child: Padding(
                         padding: const EdgeInsets.all(15.0),
@@ -89,28 +103,27 @@ class _ProviderHistoryPageState extends State<ProviderHistoryPage> {
                           children: [
                             Text(
                               'Service: ${service['service']}',
-                              style: const TextStyle(
-                                  fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black), // Set text color to black
+                              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black),
                             ),
                             const SizedBox(height: 5),
                             Text(
                               'Customer: ${service['customerName']}',
-                              style: const TextStyle(color: Colors.black), // Set text color to black
+                              style: const TextStyle(color: Colors.black),
                             ),
                             const SizedBox(height: 5),
                             Text(
                               'Details: ${service['details']}',
-                              style: const TextStyle(color: Colors.black), // Set text color to black
+                              style: const TextStyle(color: Colors.black),
                             ),
                             const SizedBox(height: 5),
                             Text(
                               'Time: ${service['time']}',
-                              style: const TextStyle(color: Colors.black), // Set text color to black
+                              style: const TextStyle(color: Colors.black),
                             ),
                             const SizedBox(height: 5),
                             Text(
                               'Location: ${service['location']}',
-                              style: const TextStyle(color: Colors.black), // Set text color to black
+                              style: const TextStyle(color: Colors.black),
                             ),
                             const SizedBox(height: 15),
                             Row(
@@ -129,7 +142,7 @@ class _ProviderHistoryPageState extends State<ProviderHistoryPage> {
                                   style: const TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,
-                                    color: Colors.black, // Set text color to black
+                                    color: Colors.black,
                                   ),
                                 ),
                               ],

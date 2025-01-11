@@ -3,10 +3,12 @@ import 'package:google_maps_flutter/google_maps_flutter.dart'; // Import LatLng
 import 'EditProfileScreen.dart';
 import 'Login_screen.dart';
 import 'history_screen.dart';
-import 'home_screen.dart';
 import 'payment.dart';
 import 'location_screen.dart'; // Import LocationScreen
 import 'api_service.dart'; // Import your API service
+import 'user_data.dart'; // Import UserData singleton
+import 'home_screen.dart'; 
+
 
 class AccountPage extends StatefulWidget {
   final List<Appointment> appointments;
@@ -21,9 +23,7 @@ class _AccountPageState extends State<AccountPage> {
   LatLng? _lastSavedLocation; // Variable to store the last saved location
   final ApiService apiService = ApiService(baseUrl: 'http://localhost:5196'); // Replace with backend URL
   String userName = "Fetching name..."; // Default placeholder for user name
-  String _phoneNumber = ""; // Variable to store phone number
   bool isLoading = true; // Track loading state
-  final int userId = 123; // Add userId variable
 
   @override
   void initState() {
@@ -32,17 +32,23 @@ class _AccountPageState extends State<AccountPage> {
   }
 
   Future<void> _fetchUserProfile() async {
+    final userId = UserData().id; // Fetch userId from UserData
+    if (userId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error: User ID not available.')),
+      );
+      return;
+    }
+
     try {
       final response = await apiService.get('/api/UserDashboard/profile?userId=$userId'); // Use userId dynamically
       if (response != null) {
         setState(() {
           userName = response['name'] ?? "Unknown User"; // Fetch user name
-          _phoneNumber = response['phoneNumber'] ?? ""; // Fetch and store phone number
         });
       } else {
         setState(() {
           userName = "Unknown User";
-          _phoneNumber = ""; // Default to empty if no phone number
         });
       }
     } catch (e) {
@@ -51,7 +57,6 @@ class _AccountPageState extends State<AccountPage> {
       );
       setState(() {
         userName = "Error fetching name";
-        _phoneNumber = ""; // Default to empty on error
       });
     } finally {
       setState(() {
@@ -88,7 +93,7 @@ class _AccountPageState extends State<AccountPage> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => EditProfileScreen(phoneNumber: _phoneNumber), // Pass the phone number
+                        builder: (context) => const EditProfileScreen(), // No parameter passed
                       ),
                     );
                   },
@@ -110,7 +115,7 @@ class _AccountPageState extends State<AccountPage> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => HistoryScreen(userId: userId), // Pass userId to HistoryScreen
+                  builder: (context) => const HistoryScreen(),
                 ),
               );
             },
@@ -166,6 +171,7 @@ class _AccountPageState extends State<AccountPage> {
             leading: const Icon(Icons.logout, color: Colors.black),
             title: const Text('Sign Out'),
             onTap: () {
+              UserData().clearUserData(); // Clear user data on logout
               Navigator.pushAndRemoveUntil(
                 context,
                 MaterialPageRoute(

@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'api_service.dart'; // Import the ApiService
 import 'home_screen.dart'; // Import Appointment class
+import 'user_data.dart'; // Import UserData singleton
 
 class HistoryScreen extends StatefulWidget {
-  final int userId; // Pass the user ID to fetch their history
-
-  const HistoryScreen({super.key, required this.userId});
+  const HistoryScreen({super.key});
 
   @override
   _HistoryScreenState createState() => _HistoryScreenState();
@@ -23,12 +22,24 @@ class _HistoryScreenState extends State<HistoryScreen> {
   }
 
   Future<void> _fetchHistory() async {
+    final userId = UserData().id; // Fetch userId from UserData
+    if (userId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error: User ID not available.')),
+      );
+      setState(() {
+        isLoading = false;
+      });
+      return;
+    }
+
     try {
-      final response = await apiService.get('/api/Users/${widget.userId}/history?page=1&pageSize=10');
+      final response = await apiService.get('/api/Users/$userId/history?page=1&pageSize=10');
       if (response is List) {
         setState(() {
           appointments = response.map((item) {
             return Appointment(
+              id: item['id'].toString(), // Use the booking ID
               providerName: item['serviceProviderName'] ?? 'Unknown Provider',
               issueDescription: item['serviceName'] ?? 'No description',
               date: item['appointmentDate']?.split('T')?.first ?? 'N/A', // Extract date

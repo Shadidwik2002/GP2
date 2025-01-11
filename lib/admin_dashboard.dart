@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'admin_manage_accounts.dart';
+import 'admin_provider_approval.dart';
 import 'login_screen.dart';
-import 'api_service.dart'; // Import your API service
+import 'api_service.dart';
 
 class AdminDashboard extends StatefulWidget {
   const AdminDashboard({super.key});
@@ -11,7 +12,7 @@ class AdminDashboard extends StatefulWidget {
 }
 
 class _AdminDashboardState extends State<AdminDashboard> {
-  final ApiService apiService = ApiService(baseUrl: 'http://localhost:5196'); // Update backend URL
+  final ApiService apiService = ApiService(baseUrl: 'http://localhost:5196');
   List<Map<String, dynamic>> _services = [];
   bool isLoading = true;
 
@@ -48,72 +49,6 @@ class _AdminDashboardState extends State<AdminDashboard> {
         isLoading = false;
       });
     }
-  }
-
-  // Function to handle editing the service
-  Future<void> _editService(int serviceId, String name, String description, String category, double price) async {
-    try {
-      // Prepare the data for the PUT request
-      final response = await apiService.put('/api/AdminDashboard/services/$serviceId', {
-        'name': name,
-        'description': description,
-        'category': category,
-        'price': price,
-        'averageRating': 0, // Example value, update as needed
-        'serviceProviderId': 123, // Replace with actual service provider ID
-      });
-
-      if (response != null) {
-        // Handle successful response
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Service updated successfully!')),
-        );
-        // Optionally, you can refresh the service list here
-        _fetchServices();
-      }
-    } catch (e) {
-      // Handle error response
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error updating service: $e')),
-      );
-    }
-  }
-
-  Future<void> _deleteService(int index) async {
-    final serviceId = _services[index]['id'];
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Service'),
-        content: const Text('Are you sure you want to delete this service?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              try {
-                await apiService.delete('/api/AdminDashboard/services/$serviceId');
-                setState(() {
-                  _services.removeAt(index);
-                });
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Service deleted successfully!')),
-                );
-              } catch (e) {
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Error deleting service: $e')),
-                );
-              }
-            },
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
-    );
   }
 
   void _signOut(BuildContext context) {
@@ -162,7 +97,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                       scrollDirection: Axis.horizontal,
                       child: DataTable(
                         columns: const [
-                          DataColumn(label: Text('ID')), // Added ID column
+                          DataColumn(label: Text('ID')),
                           DataColumn(label: Text('Name')),
                           DataColumn(label: Text('Price')),
                           DataColumn(label: Text('Description')),
@@ -173,7 +108,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                             .entries
                             .map(
                               (entry) => DataRow(cells: [
-                                DataCell(Text(entry.value['id'].toString())), // ID cell
+                                DataCell(Text(entry.value['id'].toString())),
                                 DataCell(Text(entry.value['name'])),
                                 DataCell(Text(entry.value['price'])),
                                 DataCell(Text(entry.value['description'])),
@@ -181,20 +116,11 @@ class _AdminDashboardState extends State<AdminDashboard> {
                                   children: [
                                     IconButton(
                                       icon: const Icon(Icons.edit, color: Colors.blue),
-                                      onPressed: () {
-                                        // Call _editService method with updated data
-                                        _editService(
-                                          entry.value['id'],
-                                          'Updated Name', // Example: New name
-                                          'Updated Description', // Example: New description
-                                          'Updated Category', // Example: New category
-                                          150.0, // Example: New price
-                                        );
-                                      },
+                                      onPressed: () {},
                                     ),
                                     IconButton(
                                       icon: const Icon(Icons.delete, color: Colors.red),
-                                      onPressed: () => _deleteService(entry.key),
+                                      onPressed: () {},
                                     ),
                                   ],
                                 )),
@@ -209,7 +135,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                         'Add Service (Unavailable)',
                         style: TextStyle(
                           fontSize: 16,
-                          color: Colors.grey, // Dark grey font
+                          color: Colors.grey,
                           fontStyle: FontStyle.italic,
                         ),
                       ),
@@ -219,12 +145,19 @@ class _AdminDashboardState extends State<AdminDashboard> {
               ),
             ),
       const ManageAccountsPage(), // Manage Accounts Page
+      const AdminProviderApproval(), // Admin Provider Approval Page
     ];
 
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        title: Text(_currentIndex == 0 ? 'Manage Services' : 'Manage Accounts'),
+        title: Text(
+          _currentIndex == 0
+              ? 'Manage Services'
+              : _currentIndex == 1
+                  ? 'Manage Accounts'
+                  : 'Provider Approvals',
+        ),
         centerTitle: true,
         actions: [
           IconButton(
@@ -241,22 +174,18 @@ class _AdminDashboardState extends State<AdminDashboard> {
             _currentIndex = index;
           });
         },
-        items: [
+        items: const [
           BottomNavigationBarItem(
-            icon: Image.asset(
-              'images/manage_service.png',
-              height: 30,
-              width: 30,
-            ),
+            icon: Icon(Icons.build), // Default icon for Manage Services
             label: 'Manage Services',
           ),
           BottomNavigationBarItem(
-            icon: Image.asset(
-              'images/manage_account.png',
-              height: 30,
-              width: 30,
-            ),
+            icon: Icon(Icons.person), // Default icon for Manage Accounts
             label: 'Manage Accounts',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.check_circle), // Default icon for Provider Approvals
+            label: 'Provider Approvals',
           ),
         ],
       ),

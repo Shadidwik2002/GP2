@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
-import 'api_service.dart'; // Import your ApiService class
+import 'api_service.dart'; // Import your API service
+import 'user_data.dart'; // Import UserData singleton
 
 class ChangePasswordScreen extends StatefulWidget {
-  final String phoneNumber; // Accept phone number as an argument
-
-  const ChangePasswordScreen({super.key, required this.phoneNumber});
+  const ChangePasswordScreen({super.key});
 
   @override
   _ChangePasswordScreenState createState() => _ChangePasswordScreenState();
@@ -38,9 +37,21 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   }
 
   Future<void> _resetPassword() async {
+    final phoneNumber = UserData().phoneNumber; // Fetch phoneNumber from UserData
+
+    if (phoneNumber == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Error: Phone number not available.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
     try {
       final response = await apiService.post('/api/Account/reset-password', {
-        'identifier': widget.phoneNumber, // Use the phone number dynamically
+        'identifier': phoneNumber, // Use the phone number dynamically
         'newPassword': _newPasswordController.text,
       });
 
